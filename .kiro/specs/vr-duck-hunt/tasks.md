@@ -171,32 +171,68 @@
   - **Property 21: Miss shots play miss sound**
   - **Validates: Requirements 6.2**
 
-- [ ] 9. Create gun prefab and controller
-- [ ] 9.1 Create gun 3D model and prefab
-  - Create or import simple gun 3D model (pistol or rifle)
-  - Set up gun prefab with appropriate scale and orientation
-  - Add attachment point (empty GameObject) at barrel end for muzzle flash
-  - Create gun prefab in Prefabs folder
-  - _Requirements: 6.4, 7.2_
+- [x] 9. Implement gun selection system
+- [x] 9.1 Create gun data structures and collection system
+  - Create GunData class for individual gun properties
+  - Create GunCollection ScriptableObject for managing multiple guns
+  - Define gun properties: name, description, prefab, audio, effects
+  - Set up gun validation and lookup methods
+  - _Requirements: 8.1, 8.2, 8.5_
 
-- [ ] 9.2 Implement GunController script
-  - Write GunController MonoBehaviour to manage gun attachment
-  - Implement AttachToController method to parent gun to VR controller
-  - Add reference to muzzle flash attachment point
-  - Handle gun positioning and rotation relative to controller
-  - _Requirements: 6.4_
+- [x] 9.2 Implement GunSelectionManager
+  - Write GunSelectionManager MonoBehaviour for gun switching
+  - Implement gun prefab instantiation and attachment to VR controller
+  - Add automatic muzzle point detection and creation
+  - Implement player preference persistence using PlayerPrefs
+  - Add event system for gun change notifications
+  - _Requirements: 8.2, 8.3, 8.4_
 
-- [ ] 9.3 Integrate gun with ShootingController
-  - Modify ShootingController to instantiate and attach gun prefab
-  - Update raycast origin to use gun barrel position instead of controller
-  - Wire up gun's muzzle flash attachment point
-  - Ensure gun follows controller movement and rotation
-  - _Requirements: 1.1, 6.4_
+- [x] 9.3 Enhance ShootingController with gun integration
+  - Modify ShootingController to work with GunSelectionManager
+  - Update raycast origin to use gun muzzle point dynamically
+  - Implement gun-specific audio, haptic feedback, and effects
+  - Add automatic configuration updates when gun changes
+  - _Requirements: 1.1, 6.4, 8.4_
 
-- [ ] 9.9 Wait for Unity compilation
-  - Allow Unity to compile gun-related changes
+- [x] 9.4 Create gun selection UI system
+  - Implement GunSelectionUI for user interface
+  - Create gun selection panel with show/hide functionality
+  - Add gun information display (name, description, preview)
+  - Implement next/previous gun navigation
+  - Add visual selection feedback and highlighting
+  - _Requirements: 8.5_
+
+- [x] 9.5 Set up gun assets and attribution
+  - Configure N-ZAP 85 and Nintendo Zapper Light Gun prefabs
+  - Create gun collection asset with both gun models
+  - Update CREDITS.md with proper gun asset attribution
+  - Integrate gun credits with CreditsData ScriptableObject
+  - Ensure CC-BY-4.0 license compliance for both guns
+  - _Requirements: 9.5_
+
+- [x] 9.6 Create gun collection setup utilities
+  - Write GunCollectionSetup utility for automated asset creation
+  - Add gun prefab validation and muzzle point detection
+  - Create sample gun collection with proper configuration
+  - Add comprehensive documentation and integration guides
+  - _Requirements: 8.1, 8.2_
+
+- [ ]* 9.7 Write property tests for gun selection system
+  - **Property 24: Gun selection provides multiple options**
+  - **Validates: Requirements 8.1**
+  - **Property 25: Gun attachment to controller**
+  - **Validates: Requirements 8.2**
+  - **Property 26: Gun preference persistence**
+  - **Validates: Requirements 8.3**
+  - **Property 27: Gun-specific shooting properties**
+  - **Validates: Requirements 8.4**
+  - **Property 28: Gun information display**
+  - **Validates: Requirements 8.5**
+
+- [x] 9.9 Wait for Unity compilation
+  - Allow Unity to compile gun selection system changes
   - Check Unity console for any compilation errors
-  - Verify gun scripts compile without errors
+  - Verify all gun selection scripts compile without errors
 
 - [ ] 10. Add visual effects
 - [ ] 10.1 Create and integrate particle effects
@@ -239,7 +275,8 @@
   - Create CreditsManager script to load and display credits from ScriptableObject
   - Add credits button to main menu or game over screen
   - Implement credits panel show/hide functionality
-  - _Requirements: 7.4_
+  - Include gun asset attributions for N-ZAP 85 and Nintendo Zapper Light Gun
+  - _Requirements: 7.4, 9.5_
 
 - [ ]* 11.4 Write property test for score display sync
   - **Property 12: Score display synchronization**
@@ -248,6 +285,10 @@
 - [ ]* 11.5 Write property test for game over display
   - **Property 18: Game over displays score**
   - **Validates: Requirements 5.2**
+
+- [ ]* 11.6 Write property test for asset attribution compliance
+  - **Property 29: Asset attribution compliance**
+  - **Validates: Requirements 9.5**
 
 - [ ] 12. Add difficulty feedback system
 - [ ] 12.1 Implement visual difficulty indicators

@@ -1,0 +1,11 @@
+Model Information:
+* title:	N-ZAP 85
+* source:	https://sketchfab.com/3d-models/n-zap-85-72e1be01b71348239a603f6c9116940f
+* author:	ThePinguFan2006 (https://sketchfab.com/bobblackstock1)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "N-ZAP 85" (https://sketchfab.com/3d-models/n-zap-85-72e1be01b71348239a603f6c9116940f) by ThePinguFan2006 (https://sketchfab.com/bobblackstock1) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

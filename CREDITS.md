@@ -20,6 +20,20 @@ This document contains attribution information for all third-party assets used i
 - **Source**: [To be specified]
 - **Attribution**: [To be completed]
 
+### N-ZAP 85 Gun Model
+- **Asset**: N-ZAP 85
+- **Author**: ThePinguFan2006
+- **License**: CC-BY-4.0
+- **Source**: https://sketchfab.com/3d-models/n-zap-85-72e1be01b71348239a603f6c9116940f
+- **Attribution**: This work is based on "N-ZAP 85" (https://sketchfab.com/3d-models/n-zap-85-72e1be01b71348239a603f6c9116940f) by ThePinguFan2006 (https://sketchfab.com/bobblackstock1) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+
+### Nintendo Zapper Light Gun Model
+- **Asset**: Nintendo Zapper Light Gun
+- **Author**: Matt Wilson
+- **License**: CC-BY-4.0
+- **Source**: https://sketchfab.com/3d-models/nintendo-zapper-light-gun-44dceff49a8b4397ac940a8fd470d471
+- **Attribution**: This work is based on "Nintendo Zapper Light Gun" (https://sketchfab.com/3d-models/nintendo-zapper-light-gun-44dceff49a8b4397ac940a8fd470d471) by Matt Wilson (https://sketchfab.com/edcmwils) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+
 ## Unity Packages
 
 ### XR Interaction Toolkit

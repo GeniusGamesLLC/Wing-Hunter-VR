@@ -4,6 +4,9 @@ using UnityEngine.InputSystem;
 
 public class ShootingController : MonoBehaviour
 {
+    [Header("Gun Selection")]
+    [SerializeField] private GunSelectionManager gunSelectionManager;
+    
     [Header("Shooting Settings")]
     [SerializeField] private Transform rayOrigin;
     [SerializeField] private float rayDistance = 100f;
@@ -27,6 +30,7 @@ public class ShootingController : MonoBehaviour
     
     // Private fields
     private bool triggerPressed = false;
+    private GunData currentGunData;
     
     private void Awake()
     {
@@ -48,6 +52,27 @@ public class ShootingController : MonoBehaviour
         if (rayOrigin == null)
         {
             rayOrigin = transform;
+        }
+        
+        // Find gun selection manager if not assigned
+        if (gunSelectionManager == null)
+        {
+            gunSelectionManager = FindObjectOfType<GunSelectionManager>();
+        }
+    }
+    
+    private void Start()
+    {
+        // Subscribe to gun change events
+        if (gunSelectionManager != null)
+        {
+            gunSelectionManager.OnGunChanged.AddListener(OnGunChanged);
+            
+            // Apply current gun settings if available
+            if (gunSelectionManager.CurrentGun != null)
+            {
+                OnGunChanged(gunSelectionManager.CurrentGun);
+            }
         }
     }
     
@@ -76,6 +101,45 @@ public class ShootingController : MonoBehaviour
         else if (xrController != null && xrController.activateAction != null)
         {
             xrController.activateAction.action.performed -= OnTriggerPressed;
+        }
+    }
+    
+    private void OnDestroy()
+    {
+        // Unsubscribe from gun change events
+        if (gunSelectionManager != null)
+        {
+            gunSelectionManager.OnGunChanged.RemoveListener(OnGunChanged);
+        }
+    }
+    
+    /// <summary>
+    /// Called when the selected gun changes
+    /// </summary>
+    /// <param name="newGunData">The newly selected gun data</param>
+    private void OnGunChanged(GunData newGunData)
+    {
+        currentGunData = newGunData;
+        
+        if (currentGunData != null)
+        {
+            // Update ray origin to gun's muzzle point if available
+            if (currentGunData.muzzlePoint != null)
+            {
+                rayOrigin = currentGunData.muzzlePoint;
+            }
+            
+            // Update haptic intensity from gun data
+            hapticIntensity = currentGunData.hapticIntensity;
+            
+            // Update audio clips if specified in gun data
+            if (currentGunData.fireSound != null)
+            {
+                // Use gun-specific fire sound, but keep hit/miss sounds as fallback
+                // We'll modify the audio playing logic to use gun-specific sounds
+            }
+            
+            Debug.Log($"ShootingController updated for gun: {currentGunData.gunName}");
         }
     }
     
@@ -162,7 +226,23 @@ public class ShootingController : MonoBehaviour
     /// </summary>
     private void PlayMuzzleFlash()
     {
-        if (muzzleFlash != null)
+        // Try to use gun-specific muzzle flash first
+        if (currentGunData != null && currentGunData.muzzleFlashPrefab != null && currentGunData.muzzlePoint != null)
+        {
+            // Instantiate gun-specific muzzle flash at muzzle point
+            GameObject flash = Instantiate(currentGunData.muzzleFlashPrefab, currentGunData.muzzlePoint.position, currentGunData.muzzlePoint.rotation);
+            
+            // Scale the effect if specified
+            if (currentGunData.muzzleFlashScale != 1.0f)
+            {
+                flash.transform.localScale *= currentGunData.muzzleFlashScale;
+            }
+            
+            // Auto-destroy the effect after a short time
+            Destroy(flash, 2f);
+        }
+        // Fallback to default muzzle flash
+        else if (muzzleFlash != null)
         {
             muzzleFlash.Play();
         }
@@ -187,7 +267,19 @@ public class ShootingController : MonoBehaviour
     {
         if (audioSource != null)
         {
-            AudioClip clipToPlay = wasHit ? hitSound : missSound;
+            AudioClip clipToPlay = null;
+            
+            // Use gun-specific fire sound if available
+            if (currentGunData != null && currentGunData.fireSound != null)
+            {
+                clipToPlay = currentGunData.fireSound;
+            }
+            // Otherwise use hit/miss sounds
+            else
+            {
+                clipToPlay = wasHit ? hitSound : missSound;
+            }
+            
             if (clipToPlay != null)
             {
                 audioSource.PlayOneShot(clipToPlay);
@@ -283,6 +375,52 @@ public class ShootingController : MonoBehaviour
     public void SetMuzzleFlash(ParticleSystem particles)
     {
         muzzleFlash = particles;
+    }
+    
+    /// <summary>
+    /// Set the gun selection manager
+    /// </summary>
+    /// <param name="manager">Gun selection manager to use</param>
+    public void SetGunSelectionManager(GunSelectionManager manager)
+    {
+        // Unsubscribe from old manager
+        if (gunSelectionManager != null)
+        {
+            gunSelectionManager.OnGunChanged.RemoveListener(OnGunChanged);
+        }
+        
+        // Set new manager
+        gunSelectionManager = manager;
+        
+        // Subscribe to new manager
+        if (gunSelectionManager != null)
+        {
+            gunSelectionManager.OnGunChanged.AddListener(OnGunChanged);
+            
+            // Apply current gun settings
+            if (gunSelectionManager.CurrentGun != null)
+            {
+                OnGunChanged(gunSelectionManager.CurrentGun);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Get the current gun data being used
+    /// </summary>
+    /// <returns>Current gun data or null if none selected</returns>
+    public GunData GetCurrentGunData()
+    {
+        return currentGunData;
+    }
+    
+    /// <summary>
+    /// Check if gun selection is available
+    /// </summary>
+    /// <returns>True if gun selection manager is available</returns>
+    public bool IsGunSelectionAvailable()
+    {
+        return gunSelectionManager != null && gunSelectionManager.GunCollection != null;
     }
     
     // Debug visualization in Scene view

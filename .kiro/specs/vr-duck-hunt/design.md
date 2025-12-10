@@ -29,10 +29,10 @@ The game follows a component-based architecture typical of Unity development, wi
 │         │          └──────────────┘                     │
 │         │                                                │
 │         ▼                                                │
-│  ┌──────────────┐                                       │
-│  │   Shooting   │                                       │
-│  │   Controller │                                       │
-│  └──────────────┘                                       │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │   Shooting   │◄─┤ Gun Selection│  │   Credits    │  │
+│  │   Controller │  │   Manager    │  │   Manager    │  │
+│  └──────────────┘  └──────────────┘  └──────────────┘  │
 │                                                           │
 │  ┌──────────────────────────────────────────────────┐  │
 │  │           XR Interaction Toolkit                  │  │
@@ -48,6 +48,8 @@ The game follows a component-based architecture typical of Unity development, wi
 - **ScoreManager**: Tracks player score, missed ducks count, updates UI displays, and triggers game over conditions
 - **DuckController**: Controls individual duck behavior including flight path, animation, hit detection, and destruction
 - **ShootingController**: Manages player input from VR controllers, performs raycasting, triggers effects, and communicates hits
+- **GunSelectionManager**: Manages multiple gun models, handles gun switching, and persists player preferences
+- **CreditsManager**: Displays asset attribution information and manages credits UI
 
 ## Components and Interfaces
 
@@ -154,7 +156,7 @@ public class DuckController : MonoBehaviour
 
 ### ShootingController
 
-**Purpose**: Handles VR controller shooting mechanics
+**Purpose**: Handles VR controller shooting mechanics with gun selection integration
 
 **Public Interface**:
 ```csharp
@@ -166,15 +168,68 @@ public class ShootingController : MonoBehaviour
     public AudioClip HitSound { get; set; }
     public AudioClip MissSound { get; set; }
     public ParticleSystem MuzzleFlash { get; set; }
+    public GunData GetCurrentGunData();
+    public void SetGunSelectionManager(GunSelectionManager manager);
 }
 ```
 
 **Key Behaviors**:
 - Listens for XR controller trigger input
-- Performs raycast from controller position
-- Triggers haptic feedback on controller
-- Plays appropriate audio and visual effects
+- Performs raycast from controller position or gun muzzle point
+- Triggers haptic feedback on controller with gun-specific intensity
+- Plays gun-specific audio and visual effects
 - Calls OnHit() on struck duck
+- Automatically adapts to selected gun properties
+
+### GunSelectionManager
+
+**Purpose**: Manages multiple gun models and player selection
+
+**Public Interface**:
+```csharp
+public class GunSelectionManager : MonoBehaviour
+{
+    public GunData CurrentGun { get; }
+    public int CurrentGunIndex { get; }
+    public GameObject CurrentGunInstance { get; }
+    public void SelectGun(int gunIndex);
+    public void SelectGun(string gunName);
+    public void SelectNextGun();
+    public void SelectPreviousGun();
+    public event UnityEvent<GunData> OnGunChanged;
+    public event UnityEvent<int> OnGunIndexChanged;
+}
+```
+
+**Key Behaviors**:
+- Manages collection of available gun models
+- Handles gun prefab instantiation and attachment to VR controller
+- Automatically detects or creates muzzle points for effects
+- Persists player gun preference using PlayerPrefs
+- Fires events when gun selection changes
+- Validates gun collection and handles errors gracefully
+
+### CreditsManager
+
+**Purpose**: Displays asset attribution and license information
+
+**Public Interface**:
+```csharp
+public class CreditsManager : MonoBehaviour
+{
+    public void ShowCredits();
+    public void HideCredits();
+    public void ToggleCredits();
+    public void SetCreditsData(CreditsData newCreditsData);
+}
+```
+
+**Key Behaviors**:
+- Loads credits from CreditsData ScriptableObject
+- Manages credits UI panel visibility
+- Handles scrollable credits text display
+- Provides proper attribution for all third-party assets
+- Integrates with main game UI and menus
 
 ## Data Models
 
@@ -187,6 +242,63 @@ public struct DuckSpawnData
     public Vector3 EndPosition;
     public float Speed;
     public int PointValue;
+}
+```
+
+### Gun Data
+
+```csharp
+[System.Serializable]
+public class GunData
+{
+    public string gunName;
+    public string description;
+    public GameObject gunPrefab;
+    public float fireRate;
+    public float hapticIntensity;
+    public float muzzleFlashScale;
+    public AudioClip fireSound;
+    public AudioClip reloadSound;
+    public GameObject muzzleFlashPrefab;
+    public Transform muzzlePoint;
+    public Sprite gunIcon;
+    public Texture2D gunPreview;
+}
+```
+
+### Gun Collection
+
+```csharp
+[CreateAssetMenu(fileName = "GunCollection", menuName = "Game/Gun Collection")]
+public class GunCollection : ScriptableObject
+{
+    public GunData[] AvailableGuns { get; }
+    public int DefaultGunIndex { get; }
+    public GunData GetGun(int index);
+    public GunData GetGun(string gunName);
+    public GunData GetDefaultGun();
+    public string[] GetGunNames();
+}
+```
+
+### Credits Data
+
+```csharp
+[System.Serializable]
+public struct AssetCredit
+{
+    public string assetName;
+    public string author;
+    public string license;
+    public string source;
+    public string attributionText;
+}
+
+[CreateAssetMenu(fileName = "CreditsData", menuName = "Game/Credits Data")]
+public class CreditsData : ScriptableObject
+{
+    public AssetCredit[] AssetCredits { get; }
+    public string GetFormattedCreditsText();
 }
 ```
 
@@ -336,6 +448,36 @@ public class DuckHuntConfig : ScriptableObject
 *For any* trigger pull, the muzzle flash particle effect should play.
 **Validates: Requirements 6.4**
 
+### Property 24: Gun selection provides multiple options
+
+*For any* gun selection system, at least two different gun models should be available for player choice.
+**Validates: Requirements 8.1**
+
+### Property 25: Gun attachment to controller
+
+*For any* selected gun, the gun model should be properly attached to the VR controller transform.
+**Validates: Requirements 8.2**
+
+### Property 26: Gun preference persistence
+
+*For any* gun selection, the player's choice should be saved and restored in future game sessions.
+**Validates: Requirements 8.3**
+
+### Property 27: Gun-specific shooting properties
+
+*For any* gun selection change, the shooting mechanics should adapt to use gun-specific audio, haptic feedback, and visual effects.
+**Validates: Requirements 8.4**
+
+### Property 28: Gun information display
+
+*For any* gun in the selection UI, the system should display the gun's name and description information.
+**Validates: Requirements 8.5**
+
+### Property 29: Asset attribution compliance
+
+*For any* third-party asset used in the game, proper attribution and license information should be maintained and displayable.
+**Validates: Requirements 9.5**
+
 ## Error Handling
 
 ### Input Errors
@@ -453,10 +595,14 @@ Manual testing in VR headset will verify:
 ### Asset Requirements
 
 - Duck 3D model with flying animation
+- Multiple gun 3D models (N-ZAP 85, Nintendo Zapper Light Gun)
 - Muzzle flash particle effect
 - Duck destruction particle effect
 - Hit sound effect
 - Miss sound effect
+- Gun-specific fire sounds (optional)
 - Background music (optional)
 - Skybox or environment assets
-- UI sprites for score display and game over screen
+- UI sprites for score display, game over screen, and gun selection
+- Gun preview images and icons for UI
+- License files and attribution documentation for all third-party assets

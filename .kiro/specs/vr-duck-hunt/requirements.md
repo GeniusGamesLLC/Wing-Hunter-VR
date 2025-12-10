@@ -12,6 +12,8 @@ This document specifies the requirements for a VR Duck Hunt clone game to be imp
 - **Score System**: The game component that tracks and displays player performance
 - **Spawn Manager**: The system component responsible for creating and managing duck instances
 - **Game Session**: A single playthrough from start to game over
+- **Gun Selection System**: The system component that manages multiple gun models and allows player choice
+- **Gun Entity**: A 3D gun model that can be selected and used by the player for shooting
 
 ## Requirements
 
@@ -96,6 +98,18 @@ This document specifies the requirements for a VR Duck Hunt clone game to be imp
 
 ### Requirement 8
 
+**User Story:** As a player, I want to choose between different gun models, so that I can customize my shooting experience and use my preferred weapon.
+
+#### Acceptance Criteria
+
+1. WHEN the game starts THEN the Gun Selection System SHALL provide at least two different gun models for selection
+2. WHEN a player selects a gun THEN the VR System SHALL attach the selected Gun Entity to the VR controller
+3. WHEN a gun is selected THEN the Gun Selection System SHALL persist the player's choice for future game sessions
+4. WHEN switching guns THEN the Shooting Mechanic SHALL adapt to gun-specific properties such as audio effects and haptic feedback
+5. WHEN gun selection UI is displayed THEN the VR System SHALL show gun information including name and description
+
+### Requirement 9
+
 **User Story:** As a developer, I want the project to follow Unity best practices and VR development standards, so that the codebase is maintainable and professional.
 
 #### Acceptance Criteria
@@ -104,3 +118,4 @@ This document specifies the requirements for a VR Duck Hunt clone game to be imp
 2. WHEN scripts are organized THEN the Game Session SHALL follow a clear folder structure separating managers, controllers, and utilities
 3. WHEN the game is built THEN the VR System SHALL be compatible with Meta Quest devices
 4. WHEN assets are created THEN the VR System SHALL organize them by type (Scripts, Prefabs, Materials, Audio, etc.)
+5. WHEN third-party assets are used THEN the VR System SHALL maintain proper attribution and license compliance
