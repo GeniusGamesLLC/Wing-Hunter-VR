@@ -171,25 +171,52 @@
   - **Property 21: Miss shots play miss sound**
   - **Validates: Requirements 6.2**
 
-- [ ] 9. Add visual effects
-- [ ] 9.1 Create and integrate particle effects
-  - Create muzzle flash particle system for gun
+- [ ] 9. Create gun prefab and controller
+- [ ] 9.1 Create gun 3D model and prefab
+  - Create or import simple gun 3D model (pistol or rifle)
+  - Set up gun prefab with appropriate scale and orientation
+  - Add attachment point (empty GameObject) at barrel end for muzzle flash
+  - Create gun prefab in Prefabs folder
+  - _Requirements: 6.4, 7.2_
+
+- [ ] 9.2 Implement GunController script
+  - Write GunController MonoBehaviour to manage gun attachment
+  - Implement AttachToController method to parent gun to VR controller
+  - Add reference to muzzle flash attachment point
+  - Handle gun positioning and rotation relative to controller
+  - _Requirements: 6.4_
+
+- [ ] 9.3 Integrate gun with ShootingController
+  - Modify ShootingController to instantiate and attach gun prefab
+  - Update raycast origin to use gun barrel position instead of controller
+  - Wire up gun's muzzle flash attachment point
+  - Ensure gun follows controller movement and rotation
+  - _Requirements: 1.1, 6.4_
+
+- [ ] 9.9 Wait for Unity compilation
+  - Allow Unity to compile gun-related changes
+  - Check Unity console for any compilation errors
+  - Verify gun scripts compile without errors
+
+- [ ] 10. Add visual effects
+- [ ] 10.1 Create and integrate particle effects
+  - Create muzzle flash particle system for gun barrel
   - Create destruction particle system for duck hits
-  - Attach muzzle flash to controller in ShootingController
-  - Trigger muzzle flash on trigger pull
+  - Attach muzzle flash to gun's attachment point in GunController
+  - Trigger muzzle flash on trigger pull via ShootingController
   - Instantiate destruction particles in DuckController.OnHit
   - _Requirements: 6.3, 6.4_
 
-- [ ]* 9.2 Write property test for muzzle flash
+- [ ]* 10.2 Write property test for muzzle flash
   - **Property 23: Trigger activates muzzle flash**
   - **Validates: Requirements 6.4**
 
-- [ ]* 9.3 Write property test for destruction particles
+- [ ]* 10.3 Write property test for destruction particles
   - **Property 22: Destroyed ducks spawn particles**
   - **Validates: Requirements 6.3**
 
-- [ ] 10. Implement UI system
-- [ ] 10.1 Create world-space UI canvas
+- [ ] 11. Implement UI system
+- [ ] 11.1 Create world-space UI canvas
   - Create Canvas with World Space render mode
   - Position canvas 2-3 meters in front of player
   - Add TextMeshPro text for score display
@@ -197,57 +224,67 @@
   - Create game over panel with final score and restart button
   - _Requirements: 3.2, 5.2, 5.3, 7.4_
 
-- [ ] 10.2 Wire up UI to game systems
+- [ ] 11.2 Wire up UI to game systems
   - Subscribe ScoreManager to update score text on OnScoreChanged
   - Update missed ducks text when IncrementMissed is called
   - Show game over panel when GameManager enters GameOver state
   - Wire restart button to GameManager.RestartGame
   - _Requirements: 3.2, 5.2, 5.3_
 
-- [ ]* 10.3 Write property test for score display sync
+- [x] 11.3 Create credits tracking and attribution system
+  - Create CreditsData ScriptableObject to store attribution information
+  - Define AssetCredit struct with fields: assetName, author, license, source, attributionText
+  - Create CREDITS.md file in project root to document all asset attributions
+  - Add credits panel to UI canvas with scrollable text area
+  - Create CreditsManager script to load and display credits from ScriptableObject
+  - Add credits button to main menu or game over screen
+  - Implement credits panel show/hide functionality
+  - _Requirements: 7.4_
+
+- [ ]* 11.4 Write property test for score display sync
   - **Property 12: Score display synchronization**
   - **Validates: Requirements 3.2**
 
-- [ ]* 10.4 Write property test for game over display
+- [ ]* 11.5 Write property test for game over display
   - **Property 18: Game over displays score**
   - **Validates: Requirements 5.2**
 
-- [ ] 11. Add difficulty feedback system
-- [ ] 11.1 Implement visual difficulty indicators
+- [ ] 12. Add difficulty feedback system
+- [ ] 12.1 Implement visual difficulty indicators
   - Create UI element or particle effect for difficulty change
   - Trigger visual feedback in GameManager.IncreaseDifficulty
   - Display difficulty level number to player
   - _Requirements: 4.4_
 
-- [ ]* 11.2 Write property test for difficulty feedback
+- [ ]* 12.2 Write property test for difficulty feedback
   - **Property 16: Difficulty changes show feedback**
   - **Validates: Requirements 4.4**
 
-- [ ] 12. Configure spawn points and environment
-- [ ] 12.1 Set up spawn point system
+- [ ] 13. Configure spawn points and environment
+- [ ] 13.1 Set up spawn point system
   - Create empty GameObjects as spawn points around player
   - Position spawn points in arc formation at varying heights
   - Assign spawn points to SpawnManager
   - Create corresponding target points on opposite side
   - _Requirements: 2.2_
 
-- [ ] 12.2 Polish scene environment
+- [ ] 13.2 Polish scene environment
   - Add or configure skybox for outdoor environment
   - Add ground plane with appropriate material
   - Add ambient lighting
   - Position UI canvas for comfortable viewing
   - _Requirements: 7.1, 7.4_
 
-- [ ] 13. Implement object pooling for ducks
-- [ ] 13.1 Create simple object pool system
+- [ ] 14. Implement object pooling for ducks
+- [ ] 14.1 Create simple object pool system
   - Create ObjectPool utility class for duck reuse
   - Modify SpawnManager to use pool instead of Instantiate
   - Modify DuckController to return to pool instead of Destroy
   - Set pool size based on max concurrent ducks
   - _Requirements: 2.1_
 
-- [ ] 14. Create DuckHuntConfig asset and wire up settings
-- [ ] 14.1 Configure game balance parameters
+- [ ] 15. Create DuckHuntConfig asset and wire up settings
+- [ ] 15.1 Configure game balance parameters
   - Create DuckHuntConfig ScriptableObject asset
   - Set points per duck (e.g., 10 points)
   - Set max missed ducks (e.g., 10 misses)
@@ -256,18 +293,18 @@
   - Wire config asset to GameManager
   - _Requirements: 3.1, 5.1, 4.1, 4.2_
 
-- [ ] 15. Checkpoint - Ensure all tests pass
+- [ ] 16. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 16. Build and test on Meta Quest
-- [ ] 16.1 Configure build settings
+- [ ] 17. Build and test on Meta Quest
+- [ ] 17.1 Configure build settings
   - Set build target to Android
   - Configure XR settings for Oculus
   - Set minimum API level for Quest compatibility
   - Configure graphics settings for mobile VR
   - _Requirements: 8.3_
 
-- [ ] 16.2 Test VR functionality
+- [ ] 17.2 Test VR functionality
   - Build and deploy to Meta Quest device
   - Verify controller tracking and input
   - Test shooting mechanics with physical controllers
@@ -277,15 +314,15 @@
   - Test complete gameplay loop
   - _Requirements: 1.1, 1.2, 1.4, 6.1, 6.2, 7.4_
 
-- [ ] 17. Final polish and optimization
-- [ ] 17.1 Performance optimization
+- [ ] 18. Final polish and optimization
+- [ ] 18.1 Performance optimization
   - Profile frame rate and identify bottlenecks
   - Optimize duck count and spawn rates for stable 72 FPS
   - Add LOD to duck models if needed
   - Optimize particle effects
   - _Requirements: 7.3_
 
-- [ ] 17.2 Gameplay balancing
+- [ ] 18.2 Gameplay balancing
   - Playtest and adjust difficulty curve
   - Balance spawn rates and duck speeds
   - Tune score thresholds for difficulty progression
@@ -293,5 +330,5 @@
   - Fine-tune haptic feedback intensity
   - _Requirements: 4.1, 4.2_
 
-- [ ] 18. Final checkpoint - Ensure all tests pass
+- [ ] 19. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.

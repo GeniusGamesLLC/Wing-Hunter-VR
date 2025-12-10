@@ -150,6 +150,15 @@ When modifying scenes, follow this safe workflow:
 5. **Test**: Test the change works as expected
 6. **Repeat**: Only then proceed to next modification
 
+## Unity Connection Issues
+
+If Unity MCP commands fail with "No Unity plugins are currently connected":
+1. **Stop all automated operations immediately**
+2. **Ask the user to check Unity status**: "Unity seems to be disconnected. Please check if Unity is running and the MCP connection is active, then let me know when it's ready to continue."
+3. **Wait for user confirmation** before resuming any Unity operations
+4. **Do not attempt to continue** with Unity-related tasks until connection is restored
+5. **Use file system operations** as fallback for script creation when Unity is unavailable
+
 ## Emergency Recovery
 
 If Unity becomes unresponsive:
