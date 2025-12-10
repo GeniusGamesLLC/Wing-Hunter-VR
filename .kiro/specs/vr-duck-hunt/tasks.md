@@ -316,8 +316,8 @@
   - Position UI canvas for comfortable viewing
   - _Requirements: 7.1, 7.4_
 
-- [ ] 14. Implement object pooling for ducks
-- [ ] 14.1 Create simple object pool system
+- [x] 14. Implement object pooling for ducks
+- [x] 14.1 Create simple object pool system
   - Create ObjectPool utility class for duck reuse
   - Modify SpawnManager to use pool instead of Instantiate
   - Modify DuckController to return to pool instead of Destroy

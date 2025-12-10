@@ -6,9 +6,9 @@ using UnityEngine;
 /// </summary>
 public class SpawnManager : MonoBehaviour
 {
-    [Header("Prefab References")]
-    [Tooltip("The duck prefab to spawn")]
-    public GameObject DuckPrefab;
+    [Header("Pool References")]
+    [Tooltip("The duck pool component for object reuse")]
+    public DuckPool duckPool;
     
     [Header("Spawn Configuration")]
     [Tooltip("Array of spawn point transforms where ducks can appear")]
@@ -144,9 +144,9 @@ public class SpawnManager : MonoBehaviour
     /// </summary>
     private void SpawnDuck()
     {
-        if (DuckPrefab == null)
+        if (duckPool == null)
         {
-            Debug.LogError("SpawnManager: Duck prefab is not assigned");
+            Debug.LogError("SpawnManager: Duck pool is not assigned");
             return;
         }
         
@@ -154,13 +154,15 @@ public class SpawnManager : MonoBehaviour
         Vector3 spawnPosition = GetRandomSpawnPosition();
         Vector3 targetPosition = GetRandomTargetPosition();
         
-        // Instantiate the duck
-        GameObject duckInstance = Instantiate(DuckPrefab, spawnPosition, Quaternion.identity);
+        // Get a duck from the pool
+        DuckController duckController = duckPool.GetDuck();
         
-        // Get the DuckController component and initialize it
-        DuckController duckController = duckInstance.GetComponent<DuckController>();
         if (duckController != null)
         {
+            // Position the duck at spawn location
+            duckController.transform.position = spawnPosition;
+            
+            // Initialize the duck with movement parameters
             duckController.Initialize(spawnPosition, targetPosition, currentDuckSpeed);
             
             // Subscribe to duck events for cleanup and scoring
@@ -169,8 +171,7 @@ public class SpawnManager : MonoBehaviour
         }
         else
         {
-            Debug.LogError("SpawnManager: Duck prefab does not have a DuckController component");
-            Destroy(duckInstance);
+            Debug.LogError("SpawnManager: Failed to get duck from pool");
         }
     }
     
@@ -233,6 +234,9 @@ public class SpawnManager : MonoBehaviour
         duck.OnEscaped -= OnDuckEscaped;
         
         Debug.Log("SpawnManager: Duck was destroyed (hit)");
+        
+        // Return duck to pool after a short delay to allow effects to finish
+        StartCoroutine(ReturnDuckToPoolDelayed(duck, 0.5f));
     }
     
     /// <summary>
@@ -246,6 +250,33 @@ public class SpawnManager : MonoBehaviour
         duck.OnEscaped -= OnDuckEscaped;
         
         Debug.Log("SpawnManager: Duck escaped");
+        
+        // Return duck to pool immediately since no effects need to finish
+        ReturnDuckToPool(duck);
+    }
+    
+    /// <summary>
+    /// Returns a duck to the pool immediately
+    /// </summary>
+    /// <param name="duck">The duck to return</param>
+    private void ReturnDuckToPool(DuckController duck)
+    {
+        if (duckPool != null && duck != null)
+        {
+            duckPool.ReturnDuck(duck);
+        }
+    }
+    
+    /// <summary>
+    /// Returns a duck to the pool after a delay (coroutine)
+    /// </summary>
+    /// <param name="duck">The duck to return</param>
+    /// <param name="delay">Delay in seconds</param>
+    /// <returns>Coroutine enumerator</returns>
+    private System.Collections.IEnumerator ReturnDuckToPoolDelayed(DuckController duck, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        ReturnDuckToPool(duck);
     }
     
     /// <summary>
@@ -254,9 +285,9 @@ public class SpawnManager : MonoBehaviour
     /// <returns>True if configuration is valid</returns>
     private bool ValidateSpawnConfiguration()
     {
-        if (DuckPrefab == null)
+        if (duckPool == null)
         {
-            Debug.LogError("SpawnManager: Duck prefab is not assigned");
+            Debug.LogError("SpawnManager: Duck pool is not assigned");
             return false;
         }
         

@@ -127,11 +127,10 @@ public class DuckController : MonoBehaviour
         // Play destruction effects
         PlayDestructionEffects();
         
-        // Notify listeners
+        // Notify listeners (SpawnManager will handle returning to pool)
         OnDestroyed?.Invoke(this);
         
-        // Destroy the duck after a short delay to allow effects to play
-        Destroy(gameObject, 0.5f);
+        // Note: No longer destroying the GameObject - it will be returned to pool by SpawnManager
     }
     
     /// <summary>
@@ -146,11 +145,10 @@ public class DuckController : MonoBehaviour
         // Stop flying animation
         SetAnimationState(false);
         
-        // Notify listeners that duck escaped
+        // Notify listeners that duck escaped (SpawnManager will handle returning to pool)
         OnEscaped?.Invoke(this);
         
-        // Remove the duck from scene
-        Destroy(gameObject, 0.1f);
+        // Note: No longer destroying the GameObject - it will be returned to pool by SpawnManager
     }
     
     /// <summary>
@@ -284,5 +282,32 @@ public class DuckController : MonoBehaviour
     public float GetDistanceToTarget()
     {
         return Vector3.Distance(transform.position, TargetPosition);
+    }
+    
+    /// <summary>
+    /// Reset the duck to a clean state for reuse from object pool
+    /// </summary>
+    public void ResetForReuse()
+    {
+        // Reset state flags
+        isMoving = false;
+        isDestroyed = false;
+        
+        // Reset properties
+        FlightSpeed = 5f;
+        TargetPosition = Vector3.zero;
+        
+        // Enable collider
+        if (duckCollider != null)
+        {
+            duckCollider.enabled = true;
+        }
+        
+        // Reset animation
+        SetAnimationState(false);
+        
+        // Clear events (will be reassigned by SpawnManager)
+        OnDestroyed = null;
+        OnEscaped = null;
     }
 }
