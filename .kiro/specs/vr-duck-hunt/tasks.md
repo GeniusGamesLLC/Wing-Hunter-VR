@@ -151,7 +151,7 @@
   - **Property 4: Trigger provides haptic feedback**
   - **Validates: Requirements 1.4**
 
-- [-] 8. Add audio system
+- [x] 8. Add audio system
 - [x] 8.1 Implement audio feedback for shooting
   - Add AudioSource component to ShootingController
   - Import or create hit and miss sound effects
