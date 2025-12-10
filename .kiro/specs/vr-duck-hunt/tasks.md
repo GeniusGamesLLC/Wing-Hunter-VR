@@ -47,7 +47,7 @@
   - **Validates: Requirements 5.1**
 
 - [-] 4. Implement GameManager and state management
-- [ ] 4.1 Create GameManager script with state machine
+- [x] 4.1 Create GameManager script with state machine
   - Write GameManager MonoBehaviour with GameState enum (Idle, Playing, GameOver)
   - Implement StartGame, EndGame, and RestartGame methods
   - Add difficulty tracking and IncreaseDifficulty method
@@ -63,15 +63,20 @@
   - **Property 19: Restart resets game state**
   - **Validates: Requirements 5.4**
 
-- [ ] 5. Create duck prefab and DuckController
-- [ ] 5.1 Create duck 3D model and prefab
+- [x] 5. Create duck prefab and DuckController
+- [x] 5.1 Create duck 3D model and prefab
   - Create or import simple duck 3D model with texture
   - Set up Animator component with flying animation
   - Add collider for hit detection
   - Create duck prefab in Prefabs folder
   - _Requirements: 2.5, 7.2_
 
-- [ ] 5.2 Implement DuckController script
+- [x] 5.1.5 Wait for Unity compilation
+  - Allow Unity to compile and process changes before continuing
+  - Check Unity console for any compilation errors
+  - Verify all assets are properly imported
+
+- [x] 5.2 Implement DuckController script
   - Write DuckController MonoBehaviour with movement logic
   - Implement Initialize method to set start/end positions and speed
   - Add Update method to move duck using Vector3.MoveTowards
@@ -92,8 +97,13 @@
   - **Property 3: Hit ducks are destroyed**
   - **Validates: Requirements 1.3**
 
-- [ ] 6. Implement SpawnManager
-- [ ] 6.1 Create SpawnManager script with spawning logic
+- [x] 5.9 Wait for Unity compilation
+  - Allow Unity to compile DuckController changes
+  - Check Unity console for any compilation errors
+  - Verify DuckController script compiles without errors
+
+- [x] 6. Implement SpawnManager
+- [x] 6.1 Create SpawnManager script with spawning logic
   - Write SpawnManager MonoBehaviour with coroutine-based spawning
   - Implement StartSpawning and StopSpawning methods
   - Create array of spawn point transforms
@@ -114,8 +124,13 @@
   - **Property 15: Difficulty affects duck speed**
   - **Validates: Requirements 4.2**
 
-- [ ] 7. Implement ShootingController
-- [ ] 7.1 Create ShootingController script with raycast shooting
+- [x] 6.9 Wait for Unity compilation
+  - Allow Unity to compile SpawnManager changes
+  - Check Unity console for any compilation errors
+  - Verify SpawnManager script compiles without errors
+
+- [-] 7. Implement ShootingController
+- [x] 7.1 Create ShootingController script with raycast shooting
   - Write ShootingController MonoBehaviour
   - Subscribe to XR controller trigger input action
   - Implement raycast from controller position in forward direction
