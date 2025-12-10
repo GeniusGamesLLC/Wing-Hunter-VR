@@ -290,8 +290,8 @@
   - **Property 29: Asset attribution compliance**
   - **Validates: Requirements 9.5**
 
-- [ ] 12. Add difficulty feedback system
-- [ ] 12.1 Implement visual difficulty indicators
+- [-] 12. Add difficulty feedback system
+- [x] 12.1 Implement visual difficulty indicators
   - Create UI element or particle effect for difficulty change
   - Trigger visual feedback in GameManager.IncreaseDifficulty
   - Display difficulty level number to player

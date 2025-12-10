@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -18,6 +19,13 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private TextMeshProUGUI finalScoreText;
     [SerializeField] private Button restartButton;
+    
+    [Header("Difficulty Display")]
+    [SerializeField] private TextMeshProUGUI difficultyText;
+    [SerializeField] private GameObject difficultyFeedbackPanel;
+    [SerializeField] private TextMeshProUGUI difficultyFeedbackText;
+    [SerializeField] private DifficultyFeedbackEffect difficultyEffect;
+    [SerializeField] private float feedbackDisplayDuration = 2f;
     
     [Header("Configuration")]
     [SerializeField] private Vector3 canvasPosition = new Vector3(0, 2, 3);
@@ -57,6 +65,7 @@ public class UIManager : MonoBehaviour
         if (gameManager != null)
         {
             gameManager.OnStateChanged += OnGameStateChanged;
+            gameManager.OnDifficultyChanged += OnDifficultyChanged;
         }
         
         // Wire up restart button
@@ -81,6 +90,7 @@ public class UIManager : MonoBehaviour
         if (gameManager != null)
         {
             gameManager.OnStateChanged -= OnGameStateChanged;
+            gameManager.OnDifficultyChanged -= OnDifficultyChanged;
         }
         
         if (restartButton != null)
@@ -104,10 +114,18 @@ public class UIManager : MonoBehaviour
         UpdateScoreDisplay(0);
         UpdateMissedDucksDisplay();
         
-        // Hide game over panel initially
+        // Initialize difficulty display
+        UpdateDifficultyDisplay(1);
+        
+        // Hide panels initially
         if (gameOverPanel != null)
         {
             gameOverPanel.SetActive(false);
+        }
+        
+        if (difficultyFeedbackPanel != null)
+        {
+            difficultyFeedbackPanel.SetActive(false);
         }
         
         Debug.Log("UIManager: UI initialized");
@@ -270,6 +288,74 @@ public class UIManager : MonoBehaviour
         if (worldSpaceCanvas != null)
         {
             worldSpaceCanvas.transform.localScale = Vector3.one * scale;
+        }
+    }
+    
+    /// <summary>
+    /// Updates the difficulty display text
+    /// </summary>
+    /// <param name="difficultyLevel">The current difficulty level</param>
+    private void UpdateDifficultyDisplay(int difficultyLevel)
+    {
+        if (difficultyText != null)
+        {
+            difficultyText.text = $"Level: {difficultyLevel}";
+        }
+    }
+    
+    /// <summary>
+    /// Handles difficulty level changes and shows visual feedback
+    /// </summary>
+    /// <param name="newDifficultyLevel">The new difficulty level</param>
+    private void OnDifficultyChanged(int newDifficultyLevel)
+    {
+        // Update the persistent difficulty display
+        UpdateDifficultyDisplay(newDifficultyLevel);
+        
+        // Show temporary feedback notification
+        ShowDifficultyFeedback(newDifficultyLevel);
+        
+        Debug.Log($"UIManager: Difficulty changed to level {newDifficultyLevel}");
+    }
+    
+    /// <summary>
+    /// Shows a temporary visual feedback for difficulty changes
+    /// </summary>
+    /// <param name="difficultyLevel">The new difficulty level</param>
+    private void ShowDifficultyFeedback(int difficultyLevel)
+    {
+        // Show text feedback if available
+        if (difficultyFeedbackPanel != null && difficultyFeedbackText != null)
+        {
+            // Update feedback text
+            difficultyFeedbackText.text = $"DIFFICULTY INCREASED!\nLevel {difficultyLevel}";
+            
+            // Show the feedback panel
+            difficultyFeedbackPanel.SetActive(true);
+            
+            // Hide the panel after the specified duration
+            StartCoroutine(HideDifficultyFeedbackAfterDelay());
+        }
+        
+        // Trigger particle effect if available
+        if (difficultyEffect != null)
+        {
+            difficultyEffect.TriggerDifficultyEffect(difficultyLevel);
+        }
+        
+        Debug.Log($"UIManager: Showing difficulty feedback for level {difficultyLevel}");
+    }
+    
+    /// <summary>
+    /// Coroutine to hide the difficulty feedback panel after a delay
+    /// </summary>
+    private System.Collections.IEnumerator HideDifficultyFeedbackAfterDelay()
+    {
+        yield return new WaitForSeconds(feedbackDisplayDuration);
+        
+        if (difficultyFeedbackPanel != null)
+        {
+            difficultyFeedbackPanel.SetActive(false);
         }
     }
     
