@@ -179,27 +179,72 @@ public class DuckController : MonoBehaviour
         effectGO.transform.position = transform.position;
         
         ParticleSystem particles = effectGO.AddComponent<ParticleSystem>();
-        var main = particles.main;
-        main.startLifetime = 0.5f;
-        main.startSpeed = 5f;
-        main.startSize = 0.1f;
-        main.startColor = Color.yellow;
-        main.maxParticles = 20;
         
+        // Configure main module
+        var main = particles.main;
+        main.simulationSpace = ParticleSystemSimulationSpace.World;
+        main.playOnAwake = true;
+        main.loop = false;
+        main.maxParticles = 30;
+        main.startSpeed = new ParticleSystem.MinMaxCurve(3f, 8f);
+        main.startSize = new ParticleSystem.MinMaxCurve(0.05f, 0.15f);
+        main.startLifetime = new ParticleSystem.MinMaxCurve(0.5f, 1.5f);
+        main.startColor = new Color(1f, 1f, 0.2f, 1f); // Yellow explosion
+        main.gravityModifier = 0.5f; // Some gravity for realistic fall
+        
+        // Configure emission module
         var emission = particles.emission;
+        emission.enabled = true;
+        emission.rateOverTime = 0f; // No continuous emission
         emission.SetBursts(new ParticleSystem.Burst[]
         {
-            new ParticleSystem.Burst(0.0f, 20)
+            new ParticleSystem.Burst(0.0f, 30) // Burst of 30 particles at start
         });
         
+        // Configure shape module
         var shape = particles.shape;
+        shape.enabled = true;
         shape.shapeType = ParticleSystemShapeType.Sphere;
-        shape.radius = 0.5f;
+        shape.radius = 0.2f;
+        
+        // Configure velocity over lifetime for spread
+        var velocityOverLifetime = particles.velocityOverLifetime;
+        velocityOverLifetime.enabled = true;
+        velocityOverLifetime.space = ParticleSystemSimulationSpace.Local;
+        velocityOverLifetime.radial = new ParticleSystem.MinMaxCurve(2f);
+        
+        // Configure size over lifetime
+        var sizeOverLifetime = particles.sizeOverLifetime;
+        sizeOverLifetime.enabled = true;
+        AnimationCurve sizeCurve = new AnimationCurve();
+        sizeCurve.AddKey(0f, 1f);
+        sizeCurve.AddKey(0.3f, 1.2f);
+        sizeCurve.AddKey(1f, 0f);
+        sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(1f, sizeCurve);
+        
+        // Configure color over lifetime for fade out
+        var colorOverLifetime = particles.colorOverLifetime;
+        colorOverLifetime.enabled = true;
+        Gradient gradient = new Gradient();
+        gradient.SetKeys(
+            new GradientColorKey[] { 
+                new GradientColorKey(Color.yellow, 0.0f), 
+                new GradientColorKey(Color.red, 0.5f),
+                new GradientColorKey(Color.gray, 1.0f) 
+            },
+            new GradientAlphaKey[] { 
+                new GradientAlphaKey(1.0f, 0.0f), 
+                new GradientAlphaKey(0.8f, 0.5f),
+                new GradientAlphaKey(0.0f, 1.0f) 
+            }
+        );
+        colorOverLifetime.color = gradient;
+        
+        // Add auto-destroy component
+        AutoDestroyParticleSystem autoDestroy = effectGO.AddComponent<AutoDestroyParticleSystem>();
+        autoDestroy.destroyDelay = 2f;
         
         particles.Play();
-        
-        // Destroy the effect after it finishes
-        Destroy(effectGO, 1f);
     }
     
     /// <summary>

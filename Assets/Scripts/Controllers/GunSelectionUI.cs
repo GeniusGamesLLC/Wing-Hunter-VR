@@ -161,11 +161,11 @@ public class GunSelectionUI : MonoBehaviour
         }
         
         // Set up button click event
-        Button button = listItem.GetComponent<Button>();
-        if (button != null)
+        Button listButton = listItem.GetComponent<Button>();
+        if (listButton != null)
         {
             int gunIndex = index; // Capture for closure
-            button.onClick.AddListener(() => SelectGun(gunIndex));
+            listButton.onClick.AddListener(() => SelectGun(gunIndex));
         }
         
         // Update text if TextMeshPro component exists

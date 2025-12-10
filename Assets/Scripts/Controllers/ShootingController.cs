@@ -246,6 +246,83 @@ public class ShootingController : MonoBehaviour
         {
             muzzleFlash.Play();
         }
+        // Create a simple muzzle flash if none available
+        else
+        {
+            CreateSimpleMuzzleFlash();
+        }
+    }
+    
+    /// <summary>
+    /// Create a simple muzzle flash effect if no particle system is assigned
+    /// </summary>
+    private void CreateSimpleMuzzleFlash()
+    {
+        // Create a simple muzzle flash effect using a temporary particle system
+        GameObject flashGO = new GameObject("MuzzleFlash");
+        flashGO.transform.position = rayOrigin.position;
+        flashGO.transform.rotation = rayOrigin.rotation;
+        
+        ParticleSystem particles = flashGO.AddComponent<ParticleSystem>();
+        
+        // Configure main module
+        var main = particles.main;
+        main.simulationSpace = ParticleSystemSimulationSpace.Local;
+        main.playOnAwake = true;
+        main.loop = false;
+        main.maxParticles = 50;
+        main.startSpeed = 8f;
+        main.startSize = 0.3f;
+        main.startLifetime = 0.1f;
+        main.startColor = new Color(1f, 0.8f, 0.2f, 1f); // Orange-yellow flash
+        
+        // Configure emission module
+        var emission = particles.emission;
+        emission.enabled = true;
+        emission.rateOverTime = 0f; // No continuous emission
+        emission.SetBursts(new ParticleSystem.Burst[]
+        {
+            new ParticleSystem.Burst(0.0f, 50) // Burst of 50 particles at start
+        });
+        
+        // Configure shape module
+        var shape = particles.shape;
+        shape.enabled = true;
+        shape.shapeType = ParticleSystemShapeType.Cone;
+        shape.angle = 15f;
+        shape.radius = 0.1f;
+        shape.length = 0.5f;
+        
+        // Configure velocity over lifetime
+        var velocityOverLifetime = particles.velocityOverLifetime;
+        velocityOverLifetime.enabled = true;
+        velocityOverLifetime.space = ParticleSystemSimulationSpace.Local;
+        velocityOverLifetime.z = new ParticleSystem.MinMaxCurve(10f); // Forward velocity
+        
+        // Configure size over lifetime
+        var sizeOverLifetime = particles.sizeOverLifetime;
+        sizeOverLifetime.enabled = true;
+        AnimationCurve sizeCurve = new AnimationCurve();
+        sizeCurve.AddKey(0f, 0f);
+        sizeCurve.AddKey(0.1f, 1f);
+        sizeCurve.AddKey(1f, 0f);
+        sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(1f, sizeCurve);
+        
+        // Configure color over lifetime for fade out
+        var colorOverLifetime = particles.colorOverLifetime;
+        colorOverLifetime.enabled = true;
+        Gradient gradient = new Gradient();
+        gradient.SetKeys(
+            new GradientColorKey[] { new GradientColorKey(Color.white, 0.0f), new GradientColorKey(Color.white, 1.0f) },
+            new GradientAlphaKey[] { new GradientAlphaKey(1.0f, 0.0f), new GradientAlphaKey(0.0f, 1.0f) }
+        );
+        colorOverLifetime.color = gradient;
+        
+        // Add auto-destroy component
+        AutoDestroyParticleSystem autoDestroy = flashGO.AddComponent<AutoDestroyParticleSystem>();
+        autoDestroy.destroyDelay = 1f;
+        
+        particles.Play();
     }
     
     /// <summary>

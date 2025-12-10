@@ -234,8 +234,8 @@
   - Check Unity console for any compilation errors
   - Verify all gun selection scripts compile without errors
 
-- [ ] 10. Add visual effects
-- [ ] 10.1 Create and integrate particle effects
+- [-] 10. Add visual effects
+- [x] 10.1 Create and integrate particle effects
   - Create muzzle flash particle system for gun barrel
   - Create destruction particle system for duck hits
   - Attach muzzle flash to gun's attachment point in GunController
