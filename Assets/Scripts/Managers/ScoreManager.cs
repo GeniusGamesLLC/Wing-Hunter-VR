@@ -1,9 +1,5 @@
 using System;
 using UnityEngine;
-using DuckHunt.Data;
-
-namespace DuckHunt.Managers
-{
     /// <summary>
     /// Manages the player's score, missed duck count, and game over conditions
     /// </summary>
@@ -168,4 +164,3 @@ namespace DuckHunt.Managers
     public class ReadOnlyAttribute : PropertyAttribute
     {
     }
-}

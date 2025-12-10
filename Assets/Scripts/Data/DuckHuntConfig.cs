@@ -1,7 +1,4 @@
 using UnityEngine;
-
-namespace DuckHunt.Data
-{
     /// <summary>
     /// ScriptableObject containing all configuration settings for the Duck Hunt game
     /// </summary>
@@ -86,4 +83,3 @@ namespace DuckHunt.Data
             }
         }
     }
-}

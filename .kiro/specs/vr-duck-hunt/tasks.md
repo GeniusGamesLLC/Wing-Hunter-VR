@@ -26,8 +26,8 @@
   - Create folder structure (Scripts/Managers, Scripts/Controllers, Scripts/Data)
   - _Requirements: 8.2, 8.4_
 
-- [ ] 3. Implement ScoreManager
-- [ ] 3.1 Create ScoreManager script with score tracking
+- [x] 3. Implement ScoreManager
+- [x] 3.1 Create ScoreManager script with score tracking
   - Write ScoreManager MonoBehaviour with score and missed duck counters
   - Implement AddScore, IncrementMissed, and ResetScore methods
   - Add events for OnScoreChanged and OnGameOver
@@ -46,7 +46,7 @@
   - **Property 17: Miss threshold triggers game over**
   - **Validates: Requirements 5.1**
 
-- [ ] 4. Implement GameManager and state management
+- [-] 4. Implement GameManager and state management
 - [ ] 4.1 Create GameManager script with state machine
   - Write GameManager MonoBehaviour with GameState enum (Idle, Playing, GameOver)
   - Implement StartGame, EndGame, and RestartGame methods

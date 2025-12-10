@@ -1,7 +1,4 @@
 using UnityEngine;
-
-namespace DuckHunt.Data
-{
     /// <summary>
     /// Configuration settings for a specific difficulty level
     /// </summary>
@@ -48,4 +45,3 @@ namespace DuckHunt.Data
             ScoreThreshold = scoreThreshold;
         }
     }
-}
