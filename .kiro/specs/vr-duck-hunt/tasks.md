@@ -251,8 +251,8 @@
   - **Property 22: Destroyed ducks spawn particles**
   - **Validates: Requirements 6.3**
 
-- [ ] 11. Implement UI system
-- [ ] 11.1 Create world-space UI canvas
+- [x] 11. Implement UI system
+- [x] 11.1 Create world-space UI canvas
   - Create Canvas with World Space render mode
   - Position canvas 2-3 meters in front of player
   - Add TextMeshPro text for score display
@@ -260,7 +260,7 @@
   - Create game over panel with final score and restart button
   - _Requirements: 3.2, 5.2, 5.3, 7.4_
 
-- [ ] 11.2 Wire up UI to game systems
+- [x] 11.2 Wire up UI to game systems
   - Subscribe ScoreManager to update score text on OnScoreChanged
   - Update missed ducks text when IncrementMissed is called
   - Show game over panel when GameManager enters GameOver state

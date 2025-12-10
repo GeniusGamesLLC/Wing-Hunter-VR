@@ -24,6 +24,7 @@ using UnityEngine;
         
         // Events
         public event Action<int> OnScoreChanged;
+        public event Action<int> OnMissedDucksChanged;
         public event Action OnGameOver;
         
         private void Awake()
@@ -83,6 +84,9 @@ using UnityEngine;
         {
             missedDucks++;
             
+            // Notify listeners of missed ducks change
+            OnMissedDucksChanged?.Invoke(missedDucks);
+            
             Debug.Log($"ScoreManager: Duck missed. Total missed: {missedDucks}/{maxMissedDucks}");
             
             // Check for game over condition
@@ -102,6 +106,7 @@ using UnityEngine;
             
             // Notify listeners of score reset
             OnScoreChanged?.Invoke(currentScore);
+            OnMissedDucksChanged?.Invoke(missedDucks);
             
             Debug.Log("ScoreManager: Score and missed duck count reset to zero");
         }
