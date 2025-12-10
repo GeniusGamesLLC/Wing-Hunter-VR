@@ -666,6 +666,10 @@ MonoBehaviour:
   gameOverPanel: {fileID: 0}
   finalScoreText: {fileID: 0}
   restartButton: {fileID: 0}
+  difficultyText: {fileID: 0}
+  difficultyFeedbackPanel: {fileID: 0}
+  difficultyFeedbackText: {fileID: 0}
+  feedbackDisplayDuration: 2
   canvasPosition: {x: 0, y: 2, z: 3}
   canvasRotation: {x: 0, y: 0, z: 0}
   canvasScale: 0.01
@@ -848,7 +852,7 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
-  m_PresetInfoIsWorld: 0
+  m_PresetInfoIsWorld: 1
 --- !u!223 &1173953774
 Canvas:
   m_ObjectHideFlags: 0

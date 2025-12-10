@@ -301,15 +301,15 @@
   - **Property 16: Difficulty changes show feedback**
   - **Validates: Requirements 4.4**
 
-- [ ] 13. Configure spawn points and environment
-- [ ] 13.1 Set up spawn point system
+- [x] 13. Configure spawn points and environment
+- [x] 13.1 Set up spawn point system
   - Create empty GameObjects as spawn points around player
   - Position spawn points in arc formation at varying heights
   - Assign spawn points to SpawnManager
   - Create corresponding target points on opposite side
   - _Requirements: 2.2_
 
-- [ ] 13.2 Polish scene environment
+- [x] 13.2 Polish scene environment
   - Add or configure skybox for outdoor environment
   - Add ground plane with appropriate material
   - Add ambient lighting
