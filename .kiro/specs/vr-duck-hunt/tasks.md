@@ -19,7 +19,7 @@
   - Commit initial Unity project structure to Git
   - _Requirements: 8.1_
 
-- [ ] 2. Implement core data structures and configuration
+- [x] 2. Implement core data structures and configuration
   - Create DuckHuntConfig ScriptableObject for game settings
   - Define DifficultySettings class with spawn interval and speed parameters
   - Define DuckSpawnData struct for spawn information
