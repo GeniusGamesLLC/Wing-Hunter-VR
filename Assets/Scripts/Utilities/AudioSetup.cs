@@ -35,20 +35,39 @@ public class AudioSetup : MonoBehaviour
     }
     
     /// <summary>
-    /// Load default audio clips from Resources folder
-    /// Note: Audio clips should be placed in a Resources folder to use this method
-    /// Alternatively, assign clips directly in the Inspector
+    /// Load recommended audio clips from Weapons of Choice pack
     /// </summary>
-    [ContextMenu("Load Default Audio Clips")]
-    public void LoadDefaultAudioClips()
+    [ContextMenu("Load Recommended Audio Clips")]
+    public void LoadRecommendedAudioClips()
     {
-        // Note: For this to work, audio clips need to be in a Resources folder
-        // For now, clips should be assigned manually in the Inspector
+        Debug.Log("Recommended Audio Clips for VR Duck Hunt:");
+        Debug.Log("Hit Sound: Assets/Weapons of Choice FREE - Komposite Sound/BULLETS/Shell/Shell_Short_01_SFX.wav");
+        Debug.Log("Miss Sound: Assets/Weapons of Choice FREE - Komposite Sound/BULLETS/Ricochets/Ricochet_01_SFX.wav");
+        Debug.Log("");
+        Debug.Log("To assign these clips:");
+        Debug.Log("1. Select the ShootingController GameObject");
+        Debug.Log("2. In the Inspector, find the ShootingController component");
+        Debug.Log("3. Drag the recommended audio files to Hit Sound and Miss Sound fields");
+        Debug.Log("4. The AudioSetup component will automatically configure them on Start");
         
-        Debug.Log("To use audio clips:");
-        Debug.Log("1. Assign hitSound and missSound in the Inspector");
-        Debug.Log("2. Recommended clips: Goal.wav for hits, ButtonClick.wav for misses");
-        Debug.Log("3. These can be found in Assets/MRTemplateAssets/Audio/");
+        // Apply the clips to the shooting controller if they're already assigned
+        if (hitSound != null && missSound != null)
+        {
+            SetupAudioClips();
+        }
+    }
+    
+    /// <summary>
+    /// Load fallback audio clips from MRTemplateAssets folder
+    /// </summary>
+    [ContextMenu("Load Fallback Audio Clips")]
+    public void LoadFallbackAudioClips()
+    {
+        Debug.Log("Fallback Audio Clips (if Weapons of Choice pack not available):");
+        Debug.Log("Hit Sound: Assets/MRTemplateAssets/Audio/Goal.wav");
+        Debug.Log("Miss Sound: Assets/MRTemplateAssets/Audio/ButtonClick.wav");
+        Debug.Log("");
+        Debug.Log("Note: The Weapons of Choice pack provides much better audio quality");
         
         // Apply the clips to the shooting controller if they're already assigned
         if (hitSound != null && missSound != null)

@@ -43,15 +43,15 @@ The audio system for VR Duck Hunt provides feedback for shooting actions through
 
 ### Hit Sound (hitSound)
 - **Purpose**: Played when a duck is successfully hit
-- **Recommended**: Short, satisfying sound (pop, thud, etc.)
-- **Duration**: 0.5-1.0 seconds
-- **Current Placeholder**: `Assets/MRTemplateAssets/Audio/Goal.wav`
+- **Recommended**: `Assets/Weapons of Choice FREE - Komposite Sound/BULLETS/Shell/Shell_Short_01_SFX.wav`
+- **Why**: Professional shell impact sound, perfect duration (~0.3s), satisfying feedback
+- **Fallback**: `Assets/MRTemplateAssets/Audio/Goal.wav`
 
 ### Miss Sound (missSound)
 - **Purpose**: Played when a shot misses all targets
-- **Recommended**: Subtle feedback sound (whoosh, click, etc.)
-- **Duration**: 0.3-0.5 seconds
-- **Current Placeholder**: `Assets/MRTemplateAssets/Audio/ButtonClick.wav`
+- **Recommended**: `Assets/Weapons of Choice FREE - Komposite Sound/BULLETS/Ricochets/Ricochet_01_SFX.wav`
+- **Why**: Classic ricochet sound, indicates bullet hit environment, perfect for hunting theme
+- **Fallback**: `Assets/MRTemplateAssets/Audio/ButtonClick.wav`
 
 ## Setup Instructions
 
@@ -60,9 +60,13 @@ The audio system for VR Duck Hunt provides feedback for shooting actions through
 2. Select the ShootingController GameObject
 3. In the Inspector, find the ShootingController component
 4. Assign audio clips to the Hit Sound and Miss Sound fields:
-   - Hit Sound: Drag `Assets/MRTemplateAssets/Audio/Goal.wav`
-   - Miss Sound: Drag `Assets/MRTemplateAssets/Audio/ButtonClick.wav`
+   - **Hit Sound**: Drag `Assets/Weapons of Choice FREE - Komposite Sound/BULLETS/Shell/Shell_Short_01_SFX.wav`
+   - **Miss Sound**: Drag `Assets/Weapons of Choice FREE - Komposite Sound/BULLETS/Ricochets/Ricochet_01_SFX.wav`
 5. The AudioSource component will be automatically created if not present
+
+### Fallback Setup (if Weapons of Choice pack unavailable)
+- Hit Sound: Use `Assets/MRTemplateAssets/Audio/Goal.wav`
+- Miss Sound: Use `Assets/MRTemplateAssets/Audio/ButtonClick.wav`
 
 ### Programmatic Setup
 1. Use the AudioSetup component on the ShootingController GameObject
