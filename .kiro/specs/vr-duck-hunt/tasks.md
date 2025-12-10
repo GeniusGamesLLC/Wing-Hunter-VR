@@ -324,8 +324,8 @@
   - Set pool size based on max concurrent ducks
   - _Requirements: 2.1_
 
-- [ ] 15. Create DuckHuntConfig asset and wire up settings
-- [ ] 15.1 Configure game balance parameters
+- [-] 15. Create DuckHuntConfig asset and wire up settings
+- [x] 15.1 Configure game balance parameters
   - Create DuckHuntConfig ScriptableObject asset
   - Set points per duck (e.g., 10 points)
   - Set max missed ducks (e.g., 10 misses)

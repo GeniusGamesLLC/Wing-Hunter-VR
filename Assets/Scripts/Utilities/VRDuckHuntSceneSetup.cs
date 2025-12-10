@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 
 /// <summary>
 /// Complete scene setup for VR Duck Hunt - combines spawn points and environment setup
@@ -212,7 +213,7 @@ public class VRDuckHuntSceneSetup : MonoBehaviour
         skyboxMat.SetFloat("_Exposure", 1.3f);
         
         RenderSettings.skybox = skyboxMat;
-        UnityEngine.Rendering.DynamicGI.UpdateEnvironment();
+        // Environment lighting will update automatically
     }
     
     /// <summary>
