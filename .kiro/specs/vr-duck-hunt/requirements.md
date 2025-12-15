@@ -14,6 +14,8 @@ This document specifies the requirements for a VR Duck Hunt clone game to be imp
 - **Game Session**: A single playthrough from start to game over
 - **Gun Selection System**: The system component that manages multiple gun models and allows player choice
 - **Gun Entity**: A 3D gun model that can be selected and used by the player for shooting
+- **Play Area**: The designated zone where the player can move and interact, bounded by visual and physical barriers
+- **Boundary Fence**: A visual barrier separating the player's shooting area from the duck flight zone
 
 ## Requirements
 
@@ -95,6 +97,18 @@ This document specifies the requirements for a VR Duck Hunt clone game to be imp
 2. WHEN Duck Entities are present THEN the Duck Entity SHALL use 3D models with appropriate textures
 3. WHEN the Game Session is active THEN the VR System SHALL maintain a consistent frame rate for smooth VR experience
 4. WHEN UI elements are displayed THEN the VR System SHALL position them in world space for comfortable viewing
+
+### Requirement 10
+
+**User Story:** As a player, I want a defined play area with visual boundaries, so that I know where I can move and feel safe in the VR environment.
+
+#### Acceptance Criteria
+
+1. WHEN the scene loads THEN the VR System SHALL display a ground plane that appears visually infinite
+2. WHEN the player approaches the edge of the play area THEN the VR System SHALL prevent the player from moving beyond the boundary
+3. WHEN the scene loads THEN the VR System SHALL display a fence separating the player area from the duck flight zone
+4. WHEN the player is in the play area THEN the VR System SHALL provide visual indicators showing the boundary limits
+5. WHEN the player attempts to teleport THEN the VR System SHALL restrict teleportation to within the designated play area
 
 ### Requirement 8
 

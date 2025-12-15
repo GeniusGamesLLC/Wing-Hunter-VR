@@ -592,6 +592,61 @@ Manual testing in VR headset will verify:
 - Use spatial audio for immersive sound effects
 - Avoid rapid camera movements that could cause motion sickness
 
+### Play Area and Boundary System
+
+The game features a fully enclosed fenced play area that keeps the player in a safe shooting zone while providing an immersive infinite-ground visual effect.
+
+**Visual Design:**
+- Ground plane uses a shader/material that creates an infinite horizon effect (gradient fade to skybox color at edges)
+- A rustic wooden fence completely surrounds the player area (shooting gallery aesthetic)
+- The front fence is lower (~1.2m waist height) for shooting over
+- Side and back fences can be taller (~1.5m) to clearly define boundaries
+- Floor markers or subtle grid pattern indicate the play area bounds
+
+**Boundary Implementation:**
+- Fence colliders prevent the player from walking out of the play area
+- XR Interaction Toolkit teleport areas restrict teleportation to within the fenced area
+- The play area is approximately 6m x 6m to allow room for roaming and interactive elements
+- Ducks fly beyond the front fence in the "duck zone"
+
+**Fence Design:**
+- Simple wooden post-and-rail fence (3-4 horizontal rails)
+- Front fence: ~1.2m height (waist height for shooting over), ~6m wide
+- Side fences: ~1.5m height, ~6m deep
+- Back fence: ~1.5m height, ~6m wide
+- Rustic/weathered wood material to match hunting theme
+- Corner posts at each corner of the play area
+
+**Play Area Layout:**
+- Start Button Pedestal: Near front fence, so player faces ducks when pressing start
+- Gun Display Rack: Left side of play area, along the left fence
+- Scoreboard: Outside the fence in the duck zone, facing back toward player (arcade style)
+- Player Start Position: Center-back of play area, facing front fence and ducks
+
+```
+Top-Down View:
+                    Duck Flight Zone (beyond fence)
+              [SCOREBOARD - outside fence, facing player]
+    ════════════════════════════════════════════════════
+    
+    ┌──────────────────────────────────────────────────┐
+    │ ═══════════ FRONT FENCE (low, 1.2m) ═══════════ │
+    │ ║                                              ║ │
+    │ ║              [START PEDESTAL]                ║ │
+    │ ║                                              ║ │
+    │ S                                              S │
+    │ I   [GUN RACK]                                 I │
+    │ D                                              D │
+    │ E                                              E │
+    │ ║                                              ║ │
+    │ ║                   [P] Player Start           ║ │
+    │ ║                                              ║ │
+    │ ═══════════════ BACK FENCE ═══════════════════ │
+    └──────────────────────────────────────────────────┘
+    
+    Play Area: ~6m x 6m
+```
+
 ### Asset Requirements
 
 - Duck 3D model with flying animation
@@ -606,3 +661,6 @@ Manual testing in VR headset will verify:
 - UI sprites for score display, game over screen, and gun selection
 - Gun preview images and icons for UI
 - License files and attribution documentation for all third-party assets
+- Wooden fence model or procedural fence prefab
+- Infinite ground shader/material (gradient fade effect)
+- Play area boundary markers (optional floor decals)

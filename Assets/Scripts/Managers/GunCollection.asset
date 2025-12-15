@@ -15,17 +15,18 @@ MonoBehaviour:
   availableGuns:
   - isEnabled: 1
     gunName: N-ZAP 85
-    description: The original gray light gun — a timeless classic from the 8-bit era
+    description: "The original gray light gun \u2014 a timeless classic from the
+      8-bit era"
     gunPrefab: {fileID: 2608578598736170679, guid: abda688e912794f1990eb2efb83626ad, type: 3}
     positionOffset: {x: 0, y: -0.02, z: -0.08}
     rotationOffset: {x: 0, y: 0, z: 0}
     scale: 1
     fireRate: 1
     hapticIntensity: 0.4
-    muzzleFlashScale: 0.5
+    muzzleFlashScale: 0.1
     fireSound: {fileID: 0}
     reloadSound: {fileID: 0}
-    muzzleFlashPrefab: {fileID: 0}
+    muzzleFlashPrefab: {fileID: 1743301284569550, guid: ad2ab49d0a2a17148bd51c93d977bdbc, type: 3}
     muzzlePoint: {fileID: 0}
     gunIcon: {fileID: 0}
     gunPreview: {fileID: 0}
@@ -38,10 +39,10 @@ MonoBehaviour:
     scale: 1
     fireRate: 1
     hapticIntensity: 0.4
-    muzzleFlashScale: 0.5
+    muzzleFlashScale: 0.1
     fireSound: {fileID: 0}
     reloadSound: {fileID: 0}
-    muzzleFlashPrefab: {fileID: 0}
+    muzzleFlashPrefab: {fileID: 1743301284569550, guid: ad2ab49d0a2a17148bd51c93d977bdbc, type: 3}
     muzzlePoint: {fileID: 0}
     gunIcon: {fileID: 0}
     gunPreview: {fileID: 0}
@@ -54,10 +55,10 @@ MonoBehaviour:
     scale: 1
     fireRate: 0.8
     hapticIntensity: 0.5
-    muzzleFlashScale: 0.6
+    muzzleFlashScale: 0.25
     fireSound: {fileID: 0}
     reloadSound: {fileID: 0}
-    muzzleFlashPrefab: {fileID: 0}
+    muzzleFlashPrefab: {fileID: 1743301284569550, guid: ad2ab49d0a2a17148bd51c93d977bdbc, type: 3}
     muzzlePoint: {fileID: 0}
     gunIcon: {fileID: 0}
     gunPreview: {fileID: 0}
@@ -70,10 +71,10 @@ MonoBehaviour:
     scale: 1
     fireRate: 0.8
     hapticIntensity: 0.6
-    muzzleFlashScale: 0.5
+    muzzleFlashScale: 0.1
     fireSound: {fileID: 0}
     reloadSound: {fileID: 0}
-    muzzleFlashPrefab: {fileID: 0}
+    muzzleFlashPrefab: {fileID: 1743301284569550, guid: ad2ab49d0a2a17148bd51c93d977bdbc, type: 3}
     muzzlePoint: {fileID: 0}
     gunIcon: {fileID: 0}
     gunPreview: {fileID: 0}

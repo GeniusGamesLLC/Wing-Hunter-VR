@@ -380,14 +380,25 @@
   - Fine-tune haptic feedback intensity
   - _Requirements: 4.1, 4.2_
 
-- [ ] 19. Fix muzzle flash particle effects for Quest VR
-- [ ] 19.1 Investigate and fix pink particle shader issue
+- [-] 19. Fix muzzle flash particle effects for Quest VR
+- [x] 19.1 Investigate and fix pink particle shader issue
   - Research Quest-compatible particle shaders for URP
   - Create or find Quest-compatible muzzle flash material
   - Test with Vulkan and OpenGLES3 renderers
   - Verify depth texture and soft particles work correctly
   - Update GunCollection to use fixed muzzle flash prefab
   - Re-enable muzzle flash in ShootingController
+  - _Requirements: 6.4_
+
+- [ ] 19.2 Tune muzzle flash scale per gun
+  - ~~4x effect fixed by disabling looping on MuzzleFlash.prefab~~
+  - Adjust `muzzleFlashScale` in GunCollection.asset per gun to match barrel sizes:
+    - N-ZAP 85: currently 0.5
+    - N-ZAP 89: currently 0.5
+    - S-BLAST 92: currently 0.6
+    - Golden Gun: currently 0.5
+  - Test each gun in VR to find appropriate scale values
+  - May need to adjust MuzzlePoint position in gun prefabs if flash is inside barrel
   - _Requirements: 6.4_
 
 - [ ] 20. Final checkpoint - Ensure all tests pass
@@ -522,21 +533,70 @@
 
 ## Game Polish - Gameplay Area Design
 
-- [ ] 29. Restrict duck spawn area to front of player
-- [ ] 29.1 Reconfigure spawn points to front hemisphere only
-  - Remove spawn points behind the player (negative Z or behind XR Origin)
-  - Ensure all spawn points are in a 180° arc in front of player
-  - Adjust target points to fly across the front area (left-to-right or right-to-left)
-  - Ducks should never spawn or fly behind the player
-  - _Requirements: 2.2_
+- [ ] 38. Create infinite ground visual effect
+- [ ] 38.1 Create infinite ground shader/material
+  - Create URP-compatible material for ground plane
+  - Add gradient fade at edges that blends into skybox color
+  - Ground should appear to extend infinitely in all directions
+  - Ensure shader is Quest-compatible (mobile GPU)
+  - _Requirements: 10.1_
 
-- [ ] 30. Create player boundary/play area
-- [ ] 30.1 Add invisible boundary to prevent player walking into duck area
-  - Create boundary colliders or teleport blockers around play area
-  - Player should stay in a designated "shooting gallery" zone
-  - Consider using XR Interaction Toolkit's teleport area restrictions
-  - Add visual floor markers to indicate play area bounds
-  - _Requirements: 7.1_
+- [ ] 38.2 Configure ground plane for infinite effect
+  - Scale ground plane large enough to fill peripheral vision
+  - Position ground at Y=0 with player standing on it
+  - Apply infinite ground material
+  - Test in VR to verify seamless horizon effect
+  - _Requirements: 10.1_
+
+- [ ] 39. Create fully enclosed fenced play area
+- [ ] 39.1 Create wooden fence prefab
+  - Create simple wooden post-and-rail fence section (or use primitives)
+  - 3-4 horizontal rails, rustic wood appearance
+  - Create two variants: low fence (~1.2m for front) and tall fence (~1.5m for sides/back)
+  - Apply URP-compatible wood material
+  - Add colliders to fence sections
+  - _Requirements: 10.3_
+
+- [ ] 39.2 Build enclosed fence perimeter in scene
+  - Create ~6m x 6m fenced play area
+  - Front fence: low (~1.2m) for shooting over, ~6m wide
+  - Side fences: taller (~1.5m), ~6m deep on each side
+  - Back fence: taller (~1.5m), ~6m wide
+  - Add corner posts at each corner
+  - Center the play area on player starting position
+  - _Requirements: 10.2, 10.3_
+
+- [ ] 39.3 Verify spawn points are beyond the front fence
+  - Ensure all duck spawn points are positioned beyond the front fence
+  - Ducks should fly in the area beyond the fence, not in the player area
+  - Adjust existing spawn points if needed
+  - _Requirements: 2.2, 10.3_
+
+- [ ] 39.4 Move scoreboard outside the fence
+  - Relocate WorldScoreboard to be outside the front fence, in the duck zone
+  - Position it facing back toward the player (arcade-style scoreboard)
+  - Place at comfortable viewing height and distance
+  - Ensure scoreboard is readable from anywhere in the play area
+  - _Requirements: 3.2, 10.3_
+
+- [ ] 40. Position interactive elements in play area
+- [ ] 40.1 Position start pedestal in play area
+  - Place start button pedestal near the front fence (facing the ducks)
+  - Player walks up to pedestal and presses start while already facing the duck zone
+  - Pedestal should be slightly to the right of center (scoreboard on left)
+  - _Requirements: 5.4_
+
+- [ ] 40.2 Position gun display rack in play area
+  - Place gun rack along the left side of play area (near left fence)
+  - Guns should be easily visible and accessible
+  - Rack faces inward toward center of play area
+  - _Requirements: 8.5_
+
+- [ ] 40.3 Configure teleport restrictions (if teleport enabled)
+  - Set up XR Interaction Toolkit teleport area
+  - Restrict teleportation to within the fenced play area
+  - Ensure player cannot teleport beyond any fence
+  - _Requirements: 10.5_
 
 - [ ] 31. Create game start pedestal/table
 - [ ] 31.1 Design and create start game pedestal

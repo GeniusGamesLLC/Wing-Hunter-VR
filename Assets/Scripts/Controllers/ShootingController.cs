@@ -240,24 +240,19 @@ public class ShootingController : MonoBehaviour
     
     private void PlayMuzzleFlash()
     {
-        // Muzzle flash disabled - particle effects showing pink on Quest
-        // TODO: Fix particle shader compatibility for Quest VR
         if (currentGunData != null && currentGunData.muzzleFlashPrefab != null && currentGunData.muzzlePoint != null)
         {
-            GameObject flash = Instantiate(currentGunData.muzzleFlashPrefab, currentGunData.muzzlePoint.position, currentGunData.muzzlePoint.rotation);
+            GameObject flash = Instantiate(currentGunData.muzzleFlashPrefab, currentGunData.muzzlePoint);
+            flash.transform.localPosition = Vector3.zero;
+            flash.transform.localRotation = Quaternion.identity;
             if (currentGunData.muzzleFlashScale != 1.0f)
-                flash.transform.localScale *= currentGunData.muzzleFlashScale;
-            Destroy(flash, 2f);
+                flash.transform.localScale = Vector3.one * currentGunData.muzzleFlashScale;
+            Destroy(flash, 0.5f);
         }
         else if (muzzleFlash != null)
         {
             muzzleFlash.Play();
         }
-        // Disabled fallback - was also showing pink on Quest
-        // else
-        // {
-        //     CreateSimpleMuzzleFlash();
-        // }
     }
     
     private void CreateSimpleMuzzleFlash()
