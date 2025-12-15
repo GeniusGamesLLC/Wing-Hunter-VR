@@ -6,16 +6,26 @@ using UnityEngine;
 /// </summary>
 public class SpawnManager : MonoBehaviour
 {
+    [Header("Configuration")]
+    [Tooltip("Game configuration asset")]
+    [SerializeField] private DuckHuntConfig gameConfig;
+    
     [Header("Pool References")]
     [Tooltip("The duck pool component for object reuse")]
     public DuckPool duckPool;
     
     [Header("Spawn Configuration")]
-    [Tooltip("Array of spawn point transforms where ducks can appear")]
-    public Transform[] SpawnPoints;
+    [Tooltip("Parent object containing spawn points as children (auto-discovered)")]
+    public Transform spawnPointsParent;
     
-    [Tooltip("Array of target point transforms where ducks fly towards")]
-    public Transform[] TargetPoints;
+    [Tooltip("Parent object containing target points as children (auto-discovered)")]
+    public Transform targetPointsParent;
+    
+    [Tooltip("Array of spawn point transforms (auto-populated from parent)")]
+    [SerializeField] private Transform[] SpawnPoints;
+    
+    [Tooltip("Array of target point transforms (auto-populated from parent)")]
+    [SerializeField] private Transform[] TargetPoints;
     
     [Header("Current Settings")]
     [Tooltip("Current spawn interval in seconds")]
@@ -30,19 +40,83 @@ public class SpawnManager : MonoBehaviour
     // Private fields
     private Coroutine spawnCoroutine;
     private bool isSpawning = false;
-    private DuckHuntConfig gameConfig;
+    private ScoreManager scoreManager;
     
     private void Awake()
     {
-        // Load the game configuration
-        gameConfig = Resources.Load<DuckHuntConfig>("DuckHuntConfig");
+        // Validate game configuration
         if (gameConfig == null)
         {
-            Debug.LogWarning("SpawnManager: No DuckHuntConfig found in Resources folder. Using default settings.");
+            Debug.LogError("SpawnManager: No DuckHuntConfig assigned! Please assign it in the Inspector.");
         }
+        
+        // Find ScoreManager reference
+        scoreManager = FindObjectOfType<ScoreManager>();
+        if (scoreManager == null)
+        {
+            Debug.LogWarning("SpawnManager: ScoreManager not found in scene. Missed ducks won't be tracked.");
+        }
+        
+        // Auto-discover spawn and target points from parent objects
+        AutoDiscoverSpawnPoints();
+        AutoDiscoverTargetPoints();
         
         // Validate spawn points
         ValidateSpawnConfiguration();
+    }
+    
+    /// <summary>
+    /// Auto-discovers spawn points from children of spawnPointsParent
+    /// </summary>
+    private void AutoDiscoverSpawnPoints()
+    {
+        // Try to find parent by name if not assigned
+        if (spawnPointsParent == null)
+        {
+            GameObject spawnParent = GameObject.Find("SpawnPoints");
+            if (spawnParent != null)
+            {
+                spawnPointsParent = spawnParent.transform;
+            }
+        }
+        
+        // Populate array from children
+        if (spawnPointsParent != null && spawnPointsParent.childCount > 0)
+        {
+            SpawnPoints = new Transform[spawnPointsParent.childCount];
+            for (int i = 0; i < spawnPointsParent.childCount; i++)
+            {
+                SpawnPoints[i] = spawnPointsParent.GetChild(i);
+            }
+            Debug.Log($"SpawnManager: Auto-discovered {SpawnPoints.Length} spawn points");
+        }
+    }
+    
+    /// <summary>
+    /// Auto-discovers target points from children of targetPointsParent
+    /// </summary>
+    private void AutoDiscoverTargetPoints()
+    {
+        // Try to find parent by name if not assigned
+        if (targetPointsParent == null)
+        {
+            GameObject targetParent = GameObject.Find("TargetPoints");
+            if (targetParent != null)
+            {
+                targetPointsParent = targetParent.transform;
+            }
+        }
+        
+        // Populate array from children
+        if (targetPointsParent != null && targetPointsParent.childCount > 0)
+        {
+            TargetPoints = new Transform[targetPointsParent.childCount];
+            for (int i = 0; i < targetPointsParent.childCount; i++)
+            {
+                TargetPoints[i] = targetPointsParent.GetChild(i);
+            }
+            Debug.Log($"SpawnManager: Auto-discovered {TargetPoints.Length} target points");
+        }
     }
     
     private void Start()
@@ -235,6 +309,12 @@ public class SpawnManager : MonoBehaviour
         
         Debug.Log("SpawnManager: Duck was destroyed (hit)");
         
+        // Add score for hitting the duck
+        if (scoreManager != null && gameConfig != null)
+        {
+            scoreManager.AddScore(gameConfig.PointsPerDuck);
+        }
+        
         // Return duck to pool after a short delay to allow effects to finish
         StartCoroutine(ReturnDuckToPoolDelayed(duck, 0.5f));
     }
@@ -250,6 +330,12 @@ public class SpawnManager : MonoBehaviour
         duck.OnEscaped -= OnDuckEscaped;
         
         Debug.Log("SpawnManager: Duck escaped");
+        
+        // Notify ScoreManager that a duck was missed
+        if (scoreManager != null)
+        {
+            scoreManager.IncrementMissed();
+        }
         
         // Return duck to pool immediately since no effects need to finish
         ReturnDuckToPool(duck);
