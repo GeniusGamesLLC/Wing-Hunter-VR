@@ -1812,7 +1812,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &696642681
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1828,8 +1828,6 @@ MonoBehaviour:
   scaleStep: 0.05
   minScale: 0.01
   maxScale: 2
-  textOffset: {x: 0, y: 0.15, z: 0}
-  textSize: 0.02
 --- !u!4 &696642682
 Transform:
   m_ObjectHideFlags: 0

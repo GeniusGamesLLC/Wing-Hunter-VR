@@ -380,7 +380,7 @@
   - Fine-tune haptic feedback intensity
   - _Requirements: 4.1, 4.2_
 
-- [-] 19. Fix muzzle flash particle effects for Quest VR
+- [x] 19. Fix muzzle flash particle effects for Quest VR
 - [x] 19.1 Investigate and fix pink particle shader issue
   - Research Quest-compatible particle shaders for URP
   - Create or find Quest-compatible muzzle flash material
@@ -390,7 +390,7 @@
   - Re-enable muzzle flash in ShootingController
   - _Requirements: 6.4_
 
-- [ ] 19.2 Tune muzzle flash scale per gun
+- [x] 19.2 Tune muzzle flash scale per gun
   - ~~4x effect fixed by disabling looping on MuzzleFlash.prefab~~
   - Adjust `muzzleFlashScale` in GunCollection.asset per gun to match barrel sizes:
     - N-ZAP 85: currently 0.5
@@ -631,26 +631,26 @@
 
 ## Known Bugs and Issues
 
-- [ ] 33. Fix score not updating when shooting ducks
-- [ ] 33.1 Verify SpawnManager has gameConfig wired up
+- [x] 33. Fix score not updating when shooting ducks
+- [x] 33.1 Verify SpawnManager has gameConfig wired up
   - SpawnManager now uses serialized field instead of Resources.Load
   - Ensure gameConfig is assigned to Assets/Data/DuckHuntConfig.asset in scene
   - Verify OnDuckDestroyed calls scoreManager.AddScore(gameConfig.PointsPerDuck)
   - Test that score increments when duck is hit
   - _Requirements: 3.1_
 
-- [ ] 34. Clean up unused utility scripts
+- [x] 34. Clean up unused utility scripts
 - [x] 34.1 Remove FixVRIssues.cs
   - Script was not attached to any scene object
   - Deleted: Assets/Scripts/FixVRIssues.cs
   
-- [ ] 34.2 Simplify VRGameAutoStart.cs
+- [x] 34.2 Simplify VRGameAutoStart.cs
   - Remove FixGroundMaterial() workaround - ground should be set up correctly in scene
   - Remove FixUIForVR() workaround - UI should be positioned correctly in scene
   - Keep only the game auto-start functionality (or remove entirely if using start button)
   - _Requirements: 7.1_
 
-- [ ] 35. Fix muzzle flash pink shader on Quest
+- [x] 35. Fix muzzle flash pink shader on Quest
   - Particle effects showing pink due to shader incompatibility
   - Need Quest-compatible URP particle shader
   - Currently disabled in ShootingController
@@ -658,20 +658,20 @@
 
 
 
-- [ ] 36. Fix duck destruction visual feedback
-- [ ] 36.1 Fix particle effect spawning at wrong position
+- [x] 36. Fix duck destruction visual feedback
+- [x] 36.1 Fix particle effect spawning at wrong position
   - Particle effect spawns at player's face instead of duck's position
   - Effect should spawn at duck's world position when hit
   - Check DuckController.PlayDestructionEffects() for position bug
   - _Requirements: 6.3_
 
-- [ ] 36.2 Fix duck freezing instead of playing death animation
+- [x] 36.2 Fix duck freezing instead of playing death animation
   - Ducks freeze in place when hit instead of falling/exploding
   - Should have satisfying destruction animation or immediate disappear with particles
   - Consider adding a brief fall animation before returning to pool
   - _Requirements: 6.3_
 
-- [ ] 36.3 Create proper duck destruction particle effect
+- [x] 36.3 Create proper duck destruction particle effect
   - Current effect is just pink sparks (shader issue)
   - Need a proper feather explosion or poof effect
   - Must use Quest-compatible URP shaders

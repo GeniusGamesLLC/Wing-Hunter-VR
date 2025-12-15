@@ -314,6 +314,7 @@ public class SpawnManager : MonoBehaviour
     
     /// <summary>
     /// Called when a duck is destroyed (hit by player)
+    /// Note: This is called AFTER the death animation completes in DuckController
     /// </summary>
     /// <param name="duck">The destroyed duck controller</param>
     private void OnDuckDestroyed(DuckController duck)
@@ -333,8 +334,9 @@ public class SpawnManager : MonoBehaviour
             scoreManager.AddScore(gameConfig.PointsPerDuck);
         }
         
-        // Return duck to pool after a short delay to allow effects to finish
-        StartCoroutine(ReturnDuckToPoolDelayed(duck, 0.5f));
+        // Return duck to pool immediately - death animation has already completed
+        // (OnDestroyed is fired at the end of the death animation coroutine)
+        ReturnDuckToPool(duck);
     }
     
     /// <summary>
