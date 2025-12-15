@@ -12,10 +12,14 @@ public class PerformanceManager : MonoBehaviour
     [SerializeField] private int targetFrameRate = 72;
     
     [Tooltip("Minimum acceptable frame rate before optimizations kick in")]
-    [SerializeField] private float minAcceptableFrameRate = 65f;
+    [SerializeField] private float minAcceptableFrameRate = 50f;
     
     [Tooltip("Frame rate threshold to restore quality")]
-    [SerializeField] private float qualityRestoreThreshold = 70f;
+    [SerializeField] private float qualityRestoreThreshold = 60f;
+    
+    [Header("Auto Optimization")]
+    [Tooltip("Enable automatic performance optimization (disable for manual control)")]
+    [SerializeField] private bool enableAutoOptimization = false;
     
     [Header("Monitoring Settings")]
     [Tooltip("How often to sample frame rate (in seconds)")]
@@ -53,7 +57,7 @@ public class PerformanceManager : MonoBehaviour
     
     [Header("LOD Settings")]
     [Tooltip("Enable LOD for duck models")]
-    [SerializeField] private bool enableLOD = true;
+    [SerializeField] private bool enableLOD = false;
     
     [Tooltip("LOD bias (lower = more aggressive LOD)")]
     [Range(0.1f, 2.0f)]
@@ -221,6 +225,12 @@ public class PerformanceManager : MonoBehaviour
     /// </summary>
     private void CheckPerformance()
     {
+        // Skip if auto optimization is disabled
+        if (!enableAutoOptimization)
+        {
+            return;
+        }
+        
         // Don't optimize too frequently
         if (Time.realtimeSinceStartup - lastOptimizationTime < OPTIMIZATION_COOLDOWN)
         {

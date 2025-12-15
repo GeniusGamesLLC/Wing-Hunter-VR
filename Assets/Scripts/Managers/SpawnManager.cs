@@ -211,25 +211,14 @@ public class SpawnManager : MonoBehaviour
     {
         while (isSpawning)
         {
-            // Get adjusted spawn interval from PerformanceManager if available
+            // Use base spawn interval (PerformanceManager adjustments disabled by default)
             float adjustedInterval = currentSpawnInterval;
-            if (performanceManager != null)
-            {
-                adjustedInterval = performanceManager.GetAdjustedSpawnInterval(currentSpawnInterval);
-            }
             
             // Wait for the spawn interval
             yield return new WaitForSeconds(adjustedInterval);
             
-            // Check if we can spawn based on performance limits
-            bool canSpawn = true;
-            if (performanceManager != null)
-            {
-                canSpawn = performanceManager.CanSpawnDuck(activeDuckCount);
-            }
-            
-            // Spawn a duck if still spawning and within limits
-            if (isSpawning && canSpawn)
+            // Spawn a duck if still spawning
+            if (isSpawning)
             {
                 SpawnDuck();
             }
@@ -266,14 +255,8 @@ public class SpawnManager : MonoBehaviour
             duckController.OnDestroyed += OnDuckDestroyed;
             duckController.OnEscaped += OnDuckEscaped;
             
-            // Track active duck count for performance management
+            // Track active duck count for performance monitoring
             activeDuckCount++;
-            
-            // Setup LOD if PerformanceManager is available
-            if (performanceManager != null)
-            {
-                performanceManager.SetupDuckLOD(duckController.gameObject);
-            }
         }
         else
         {

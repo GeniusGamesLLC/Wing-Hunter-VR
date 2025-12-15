@@ -2609,6 +2609,7 @@ MonoBehaviour:
   targetFrameRate: 72
   minAcceptableFrameRate: 65
   qualityRestoreThreshold: 70
+  enableAutoOptimization: 0
   sampleInterval: 0.5
   sampleCount: 10
   maxConcurrentDucks: 15
