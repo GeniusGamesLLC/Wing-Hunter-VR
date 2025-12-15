@@ -11,7 +11,12 @@ public class UIManager : MonoBehaviour
     [Header("UI Canvas")]
     [SerializeField] private Canvas worldSpaceCanvas;
     
-    [Header("Score Display")]
+    [Header("Score Display - World Space (TextMeshPro)")]
+    [SerializeField] private TextMeshPro scoreText3D;
+    [SerializeField] private TextMeshPro missedDucksText3D;
+    [SerializeField] private TextMeshPro levelText3D;
+    
+    [Header("Score Display - Canvas (TextMeshProUGUI) - Legacy")]
     [SerializeField] private TextMeshProUGUI scoreText;
     [SerializeField] private TextMeshProUGUI missedDucksText;
     
@@ -50,6 +55,206 @@ public class UIManager : MonoBehaviour
         if (scoreManager == null)
         {
             Debug.LogError("UIManager: ScoreManager not found in scene!");
+        }
+        
+        // Auto-discover UI elements if not assigned
+        AutoDiscoverUIElements();
+    }
+    
+    /// <summary>
+    /// Auto-discovers UI elements by name if they are not manually assigned
+    /// </summary>
+    private void AutoDiscoverUIElements()
+    {
+        // First try to find world-space scoreboard (preferred for VR)
+        AutoDiscoverWorldSpaceScoreboard();
+        
+        // Find Canvas if not assigned (legacy/fallback)
+        if (worldSpaceCanvas == null)
+        {
+            worldSpaceCanvas = FindObjectOfType<Canvas>();
+            if (worldSpaceCanvas != null)
+            {
+                Debug.Log("UIManager: Auto-discovered Canvas");
+            }
+        }
+        
+        if (worldSpaceCanvas == null && scoreText3D == null)
+        {
+            Debug.LogWarning("UIManager: No Canvas or WorldScoreboard found in scene!");
+            return;
+        }
+        
+        // Find UI elements within the canvas (if canvas exists)
+        if (worldSpaceCanvas == null) return;
+        Transform canvasTransform = worldSpaceCanvas.transform;
+        
+        // Score display elements
+        if (scoreText == null)
+        {
+            scoreText = FindUIElement<TextMeshProUGUI>(canvasTransform, "ScoreText");
+        }
+        
+        if (missedDucksText == null)
+        {
+            missedDucksText = FindUIElement<TextMeshProUGUI>(canvasTransform, "MissedDucksText");
+        }
+        
+        if (difficultyText == null)
+        {
+            difficultyText = FindUIElement<TextMeshProUGUI>(canvasTransform, "DifficultyText");
+        }
+        
+        // Game over panel elements
+        if (gameOverPanel == null)
+        {
+            Transform panel = FindChildRecursive(canvasTransform, "GameOverPanel");
+            if (panel != null)
+            {
+                gameOverPanel = panel.gameObject;
+                Debug.Log("UIManager: Auto-discovered GameOverPanel");
+            }
+        }
+        
+        if (finalScoreText == null && gameOverPanel != null)
+        {
+            finalScoreText = FindUIElement<TextMeshProUGUI>(gameOverPanel.transform, "FinalScoreText");
+        }
+        
+        if (restartButton == null && gameOverPanel != null)
+        {
+            // Try to find by name RestartButton or just Button
+            restartButton = FindUIElement<Button>(gameOverPanel.transform, "RestartButton");
+            if (restartButton == null)
+            {
+                restartButton = FindUIElement<Button>(gameOverPanel.transform, "Button");
+            }
+        }
+        
+        // Difficulty feedback panel elements
+        if (difficultyFeedbackPanel == null)
+        {
+            Transform panel = FindChildRecursive(canvasTransform, "DifficultyFeedbackPanel");
+            if (panel != null)
+            {
+                difficultyFeedbackPanel = panel.gameObject;
+                Debug.Log("UIManager: Auto-discovered DifficultyFeedbackPanel");
+            }
+        }
+        
+        if (difficultyFeedbackText == null && difficultyFeedbackPanel != null)
+        {
+            difficultyFeedbackText = FindUIElement<TextMeshProUGUI>(difficultyFeedbackPanel.transform, "DifficultyFeedbackText");
+        }
+        
+        // Log discovery results
+        LogDiscoveryResults();
+    }
+    
+    /// <summary>
+    /// Auto-discovers world-space scoreboard TextMeshPro elements
+    /// </summary>
+    private void AutoDiscoverWorldSpaceScoreboard()
+    {
+        GameObject scoreboard = GameObject.Find("WorldScoreboard");
+        if (scoreboard == null) return;
+        
+        Debug.Log("UIManager: Found WorldScoreboard, discovering text elements...");
+        
+        if (scoreText3D == null)
+        {
+            Transform t = FindChildRecursive(scoreboard.transform, "ScoreText");
+            if (t != null) scoreText3D = t.GetComponent<TextMeshPro>();
+        }
+        
+        if (missedDucksText3D == null)
+        {
+            Transform t = FindChildRecursive(scoreboard.transform, "MissedText");
+            if (t != null) missedDucksText3D = t.GetComponent<TextMeshPro>();
+        }
+        
+        if (levelText3D == null)
+        {
+            Transform t = FindChildRecursive(scoreboard.transform, "LevelText");
+            if (t != null) levelText3D = t.GetComponent<TextMeshPro>();
+        }
+        
+        Debug.Log($"UIManager: WorldScoreboard - Score:{scoreText3D != null}, Missed:{missedDucksText3D != null}, Level:{levelText3D != null}");
+    }
+    
+    /// <summary>
+    /// Finds a UI element of type T by name within a parent transform
+    /// </summary>
+    private T FindUIElement<T>(Transform parent, string elementName) where T : Component
+    {
+        Transform found = FindChildRecursive(parent, elementName);
+        if (found != null)
+        {
+            T component = found.GetComponent<T>();
+            if (component != null)
+            {
+                Debug.Log($"UIManager: Auto-discovered {elementName}");
+                return component;
+            }
+        }
+        return null;
+    }
+    
+    /// <summary>
+    /// Recursively finds a child transform by name
+    /// </summary>
+    private Transform FindChildRecursive(Transform parent, string childName)
+    {
+        // Check direct children first
+        Transform found = parent.Find(childName);
+        if (found != null)
+        {
+            return found;
+        }
+        
+        // Search recursively in all children
+        foreach (Transform child in parent)
+        {
+            found = FindChildRecursive(child, childName);
+            if (found != null)
+            {
+                return found;
+            }
+        }
+        
+        return null;
+    }
+    
+    /// <summary>
+    /// Logs the results of UI element discovery
+    /// </summary>
+    private void LogDiscoveryResults()
+    {
+        int found = 0;
+        int missing = 0;
+        
+        if (worldSpaceCanvas != null) found++; else missing++;
+        if (scoreText != null) found++; else missing++;
+        if (missedDucksText != null) found++; else missing++;
+        if (difficultyText != null) found++; else missing++;
+        if (gameOverPanel != null) found++; else missing++;
+        if (finalScoreText != null) found++; else missing++;
+        if (restartButton != null) found++; else missing++;
+        if (difficultyFeedbackPanel != null) found++; else missing++;
+        if (difficultyFeedbackText != null) found++; else missing++;
+        
+        Debug.Log($"UIManager: UI element discovery complete. Found: {found}, Missing: {missing}");
+        
+        if (missing > 0)
+        {
+            if (scoreText == null) Debug.LogWarning("UIManager: ScoreText not found");
+            if (missedDucksText == null) Debug.LogWarning("UIManager: MissedDucksText not found");
+            if (difficultyText == null) Debug.LogWarning("UIManager: DifficultyText not found");
+            if (gameOverPanel == null) Debug.LogWarning("UIManager: GameOverPanel not found");
+            if (finalScoreText == null) Debug.LogWarning("UIManager: FinalScoreText not found");
+            if (restartButton == null) Debug.LogWarning("UIManager: RestartButton not found");
+            if (difficultyFeedbackPanel == null) Debug.LogWarning("UIManager: DifficultyFeedbackPanel not found");
+            if (difficultyFeedbackText == null) Debug.LogWarning("UIManager: DifficultyFeedbackText not found");
         }
     }
     
@@ -156,10 +361,12 @@ public class UIManager : MonoBehaviour
     /// <param name="newScore">The new score value</param>
     private void UpdateScoreDisplay(int newScore)
     {
+        // World-space 3D text (preferred)
+        if (scoreText3D != null)
+            scoreText3D.text = $"Score: {newScore}";
+        // Legacy canvas text
         if (scoreText != null)
-        {
             scoreText.text = $"Score: {newScore}";
-        }
     }
     
     /// <summary>
@@ -167,10 +374,13 @@ public class UIManager : MonoBehaviour
     /// </summary>
     private void UpdateMissedDucksDisplay()
     {
-        if (missedDucksText != null && scoreManager != null)
-        {
-            missedDucksText.text = $"Missed: {scoreManager.MissedDucks}/{scoreManager.MaxMissedDucks}";
-        }
+        if (scoreManager == null) return;
+        string text = $"Missed: {scoreManager.MissedDucks}/{scoreManager.MaxMissedDucks}";
+        
+        if (missedDucksText3D != null)
+            missedDucksText3D.text = text;
+        if (missedDucksText != null)
+            missedDucksText.text = text;
     }
     
     /// <summary>
@@ -179,10 +389,13 @@ public class UIManager : MonoBehaviour
     /// <param name="missedCount">The new missed ducks count</param>
     private void UpdateMissedDucksDisplay(int missedCount)
     {
-        if (missedDucksText != null && scoreManager != null)
-        {
-            missedDucksText.text = $"Missed: {missedCount}/{scoreManager.MaxMissedDucks}";
-        }
+        if (scoreManager == null) return;
+        string text = $"Missed: {missedCount}/{scoreManager.MaxMissedDucks}";
+        
+        if (missedDucksText3D != null)
+            missedDucksText3D.text = text;
+        if (missedDucksText != null)
+            missedDucksText.text = text;
     }
     
     /// <summary>
@@ -297,10 +510,12 @@ public class UIManager : MonoBehaviour
     /// <param name="difficultyLevel">The current difficulty level</param>
     private void UpdateDifficultyDisplay(int difficultyLevel)
     {
+        string text = $"Level: {difficultyLevel}";
+        
+        if (levelText3D != null)
+            levelText3D.text = text;
         if (difficultyText != null)
-        {
-            difficultyText.text = $"Level: {difficultyLevel}";
-        }
+            difficultyText.text = text;
     }
     
     /// <summary>

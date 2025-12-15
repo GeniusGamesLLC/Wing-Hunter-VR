@@ -1,5 +1,8 @@
 using System;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public class DuckController : MonoBehaviour
 {
@@ -13,6 +16,7 @@ public class DuckController : MonoBehaviour
     
     [Header("Effects")]
     public ParticleSystem destructionParticles;
+    [SerializeField] private GameObject explosionPrefab;
     
     // Events
     public event Action<DuckController> OnDestroyed;
@@ -168,9 +172,19 @@ public class DuckController : MonoBehaviour
     }
     
     /// <summary>
-    /// Create a simple destruction effect if no particle system is assigned
+    /// Create a destruction effect using the assigned explosion prefab or fallback
     /// </summary>
     private void CreateSimpleDestructionEffect()
+    {
+        // For now, always use the fallback effect since Unity Particle Pack materials 
+        // are not compatible with URP and cause pink particles
+        CreateFallbackDestructionEffect();
+    }
+    
+    /// <summary>
+    /// Fallback method to create a simple particle effect that works with URP
+    /// </summary>
+    private void CreateFallbackDestructionEffect()
     {
         // Create a simple explosion effect using a temporary particle system
         GameObject effectGO = new GameObject("DestructionEffect");
@@ -178,7 +192,7 @@ public class DuckController : MonoBehaviour
         
         ParticleSystem particles = effectGO.AddComponent<ParticleSystem>();
         
-        // Configure main module
+        // Configure main module for a nice explosion
         var main = particles.main;
         main.simulationSpace = ParticleSystemSimulationSpace.World;
         main.playOnAwake = true;
@@ -187,31 +201,28 @@ public class DuckController : MonoBehaviour
         main.startSpeed = new ParticleSystem.MinMaxCurve(3f, 8f);
         main.startSize = new ParticleSystem.MinMaxCurve(0.05f, 0.15f);
         main.startLifetime = new ParticleSystem.MinMaxCurve(0.5f, 1.5f);
-        main.startColor = new Color(1f, 1f, 0.2f, 1f); // Yellow explosion
-        main.gravityModifier = 0.5f; // Some gravity for realistic fall
+        main.startColor = new Color(1f, 1f, 0.2f, 1f); // Bright yellow explosion
+        main.gravityModifier = 0.3f; // Some gravity for realistic fall
         
-        // Configure emission module
+        // Configure emission for burst
         var emission = particles.emission;
         emission.enabled = true;
-        emission.rateOverTime = 0f; // No continuous emission
-        emission.SetBursts(new ParticleSystem.Burst[]
-        {
-            new ParticleSystem.Burst(0.0f, 30) // Burst of 30 particles at start
-        });
+        emission.rateOverTime = 0f;
+        emission.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0.0f, 30) });
         
-        // Configure shape module
+        // Configure shape for spherical explosion
         var shape = particles.shape;
         shape.enabled = true;
         shape.shapeType = ParticleSystemShapeType.Sphere;
         shape.radius = 0.2f;
         
-        // Configure velocity over lifetime for spread
+        // Configure velocity over lifetime for outward explosion
         var velocityOverLifetime = particles.velocityOverLifetime;
         velocityOverLifetime.enabled = true;
         velocityOverLifetime.space = ParticleSystemSimulationSpace.Local;
         velocityOverLifetime.radial = new ParticleSystem.MinMaxCurve(2f);
         
-        // Configure size over lifetime
+        // Configure size over lifetime for nice scaling
         var sizeOverLifetime = particles.sizeOverLifetime;
         sizeOverLifetime.enabled = true;
         AnimationCurve sizeCurve = new AnimationCurve();
@@ -238,10 +249,8 @@ public class DuckController : MonoBehaviour
         );
         colorOverLifetime.color = gradient;
         
-        // Add auto-destroy component
-        AutoDestroyParticleSystem autoDestroy = effectGO.AddComponent<AutoDestroyParticleSystem>();
-        autoDestroy.destroyDelay = 2f;
-        
+        // Auto-destroy
+        Destroy(effectGO, 2f);
         particles.Play();
     }
     

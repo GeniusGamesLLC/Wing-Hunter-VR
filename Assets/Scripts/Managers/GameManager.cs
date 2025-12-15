@@ -24,6 +24,10 @@ using UnityEngine;
         public event Action<GameState> OnStateChanged;
         public event Action<int> OnDifficultyChanged;
         
+        // Public setters for setup scripts
+        public void SetScoreManager(ScoreManager manager) => scoreManager = manager;
+        public void SetSpawnManager(SpawnManager manager) => spawnManager = manager;
+        
         private void Awake()
         {
             // Validate configuration

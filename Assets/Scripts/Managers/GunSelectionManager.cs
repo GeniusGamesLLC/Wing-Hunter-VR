@@ -6,6 +6,7 @@ public class GunSelectionManager : MonoBehaviour
     [Header("Gun Configuration")]
     [SerializeField] private GunCollection gunCollection;
     [SerializeField] private Transform gunAttachPoint;
+    [SerializeField] private GameObject controllerVisual; // The controller model to hide when gun is equipped
     
     [Header("Current Gun State")]
     [SerializeField] private int currentGunIndex = 0;
@@ -71,6 +72,19 @@ public class GunSelectionManager : MonoBehaviour
             return;
         }
         
+        // Skip disabled guns - find next enabled gun
+        if (!newGunData.isEnabled)
+        {
+            int nextEnabled = FindNextEnabledGunIndex(gunIndex);
+            if (nextEnabled < 0)
+            {
+                Debug.LogError("No enabled guns available!");
+                return;
+            }
+            gunIndex = nextEnabled;
+            newGunData = gunCollection.GetGun(gunIndex);
+        }
+        
         // Destroy current gun if exists
         if (currentGunInstance != null)
         {
@@ -81,14 +95,28 @@ public class GunSelectionManager : MonoBehaviour
         if (gunAttachPoint != null && newGunData.gunPrefab != null)
         {
             currentGunInstance = Instantiate(newGunData.gunPrefab, gunAttachPoint);
-            currentGunInstance.transform.localPosition = Vector3.zero;
-            currentGunInstance.transform.localRotation = Quaternion.identity;
+            
+            // Apply transform settings from GunData
+            currentGunInstance.transform.localPosition = newGunData.positionOffset;
+            currentGunInstance.transform.localRotation = Quaternion.Euler(newGunData.rotationOffset);
+            currentGunInstance.transform.localScale = Vector3.one * newGunData.scale;
             
             // Find muzzle point in the gun prefab
             Transform muzzlePoint = FindMuzzlePoint(currentGunInstance);
             if (muzzlePoint != null)
             {
                 newGunData.muzzlePoint = muzzlePoint;
+            }
+            
+            // Hide controller visual when gun is equipped
+            if (controllerVisual != null)
+            {
+                controllerVisual.SetActive(false);
+            }
+            else
+            {
+                // Try to find and hide controller visual automatically
+                HideControllerVisual();
             }
         }
         
@@ -124,21 +152,63 @@ public class GunSelectionManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Select next gun in the collection
+    /// Select next enabled gun in the collection
     /// </summary>
     public void SelectNextGun()
     {
-        int nextIndex = (currentGunIndex + 1) % gunCollection.AvailableGuns.Length;
-        SelectGun(nextIndex);
+        int nextIndex = FindNextEnabledGunIndex(currentGunIndex);
+        if (nextIndex >= 0)
+        {
+            SelectGun(nextIndex);
+        }
     }
     
     /// <summary>
-    /// Select previous gun in the collection
+    /// Select previous enabled gun in the collection
     /// </summary>
     public void SelectPreviousGun()
     {
-        int prevIndex = (currentGunIndex - 1 + gunCollection.AvailableGuns.Length) % gunCollection.AvailableGuns.Length;
-        SelectGun(prevIndex);
+        int prevIndex = FindPreviousEnabledGunIndex(currentGunIndex);
+        if (prevIndex >= 0)
+        {
+            SelectGun(prevIndex);
+        }
+    }
+    
+    /// <summary>
+    /// Find the next enabled gun index after the given index
+    /// </summary>
+    private int FindNextEnabledGunIndex(int fromIndex)
+    {
+        int count = gunCollection.AvailableGuns.Length;
+        for (int i = 1; i <= count; i++)
+        {
+            int checkIndex = (fromIndex + i) % count;
+            GunData gun = gunCollection.GetGun(checkIndex);
+            if (gun != null && gun.isEnabled && gun.IsValid())
+            {
+                return checkIndex;
+            }
+        }
+        return -1; // No enabled guns found
+    }
+    
+    /// <summary>
+    /// Find the previous enabled gun index before the given index
+    /// </summary>
+    private int FindPreviousEnabledGunIndex(int fromIndex)
+    {
+        int count = gunCollection.AvailableGuns.Length;
+        for (int i = 1; i <= count; i++)
+        {
+            int checkIndex = (fromIndex - i + count) % count;
+            GunData gun = gunCollection.GetGun(checkIndex);
+            if (gun != null && gun.isEnabled && gun.IsValid())
+            {
+                return checkIndex;
+            }
+        }
+        return -1; // No enabled guns found
     }
     
     /// <summary>
@@ -236,6 +306,51 @@ public class GunSelectionManager : MonoBehaviour
         if (currentGunInstance != null)
         {
             DestroyImmediate(currentGunInstance);
+        }
+    }
+    
+    /// <summary>
+    /// Hide the controller visual model when a gun is equipped
+    /// </summary>
+    private void HideControllerVisual()
+    {
+        if (gunAttachPoint == null) return;
+        
+        // Look for common controller visual names in the parent hierarchy
+        string[] visualNames = { "Controller Visual", "Right Controller Visual", "Left Controller Visual", 
+                                  "ControllerVisual", "Model", "ControllerModel" };
+        
+        Transform parent = gunAttachPoint.parent;
+        while (parent != null)
+        {
+            foreach (string name in visualNames)
+            {
+                Transform visual = parent.Find(name);
+                if (visual != null)
+                {
+                    visual.gameObject.SetActive(false);
+                    Debug.Log($"GunSelectionManager: Hidden controller visual: {visual.name}");
+                    return;
+                }
+            }
+            parent = parent.parent;
+        }
+        
+        // Also check siblings of the attach point
+        if (gunAttachPoint.parent != null)
+        {
+            foreach (Transform sibling in gunAttachPoint.parent)
+            {
+                foreach (string name in visualNames)
+                {
+                    if (sibling.name.Contains(name) || sibling.name.Contains("Visual"))
+                    {
+                        sibling.gameObject.SetActive(false);
+                        Debug.Log($"GunSelectionManager: Hidden controller visual: {sibling.name}");
+                        return;
+                    }
+                }
+            }
         }
     }
 }

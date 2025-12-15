@@ -1,0 +1,80 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a299a68d2b6648089ca35ee240bf2a3, type: 3}
+  m_Name: GunCollection
+  m_EditorClassIdentifier: Assembly-CSharp::GunCollection
+  availableGuns:
+  - isEnabled: 1
+    gunName: N-ZAP 85
+    description: The original gray light gun — a timeless classic from the 8-bit era
+    gunPrefab: {fileID: 2608578598736170679, guid: abda688e912794f1990eb2efb83626ad, type: 3}
+    positionOffset: {x: 0, y: -0.02, z: -0.08}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scale: 1
+    fireRate: 1
+    hapticIntensity: 0.4
+    muzzleFlashScale: 0.5
+    fireSound: {fileID: 0}
+    reloadSound: {fileID: 0}
+    muzzleFlashPrefab: {fileID: 0}
+    muzzlePoint: {fileID: 0}
+    gunIcon: {fileID: 0}
+    gunPreview: {fileID: 0}
+  - isEnabled: 1
+    gunName: N-ZAP 89
+    description: Bold orange redesign of the legendary light gun, built for speed
+    gunPrefab: {fileID: 3608578598736170680, guid: a28d9ce3cab6347c4814cae2982d3c61, type: 3}
+    positionOffset: {x: 0, y: -0.02, z: -0.08}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scale: 1
+    fireRate: 1
+    hapticIntensity: 0.4
+    muzzleFlashScale: 0.5
+    fireSound: {fileID: 0}
+    reloadSound: {fileID: 0}
+    muzzleFlashPrefab: {fileID: 0}
+    muzzlePoint: {fileID: 0}
+    gunIcon: {fileID: 0}
+    gunPreview: {fileID: 0}
+  - isEnabled: 1
+    gunName: S-BLAST 92
+    description: Splatoon-style precision blaster handgun
+    gunPrefab: {fileID: 919132149155446097, guid: c19590757c0af438c88b5ecb7d984b30, type: 3}
+    positionOffset: {x: 0, y: -0.02, z: -0.05}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scale: 1
+    fireRate: 0.8
+    hapticIntensity: 0.5
+    muzzleFlashScale: 0.6
+    fireSound: {fileID: 0}
+    reloadSound: {fileID: 0}
+    muzzleFlashPrefab: {fileID: 0}
+    muzzlePoint: {fileID: 0}
+    gunIcon: {fileID: 0}
+    gunPreview: {fileID: 0}
+  - isEnabled: 1
+    gunName: Golden Gun
+    description: The iconic one-shot-kill pistol from James Bond
+    gunPrefab: {fileID: 8884028485039754752, guid: e96bc9d997a73412196193f9d06127d8, type: 3}
+    positionOffset: {x: 0, y: -0.02, z: -0.05}
+    rotationOffset: {x: 0, y: 0, z: 0}
+    scale: 1
+    fireRate: 0.8
+    hapticIntensity: 0.6
+    muzzleFlashScale: 0.5
+    fireSound: {fileID: 0}
+    reloadSound: {fileID: 0}
+    muzzleFlashPrefab: {fileID: 0}
+    muzzlePoint: {fileID: 0}
+    gunIcon: {fileID: 0}
+    gunPreview: {fileID: 0}
+  defaultGunIndex: 0

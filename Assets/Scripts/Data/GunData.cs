@@ -4,9 +4,15 @@ using UnityEngine;
 public class GunData
 {
     [Header("Gun Information")]
+    public bool isEnabled = true;
     public string gunName;
     public string description;
     public GameObject gunPrefab;
+    
+    [Header("Gun Transform")]
+    public Vector3 positionOffset = Vector3.zero;
+    public Vector3 rotationOffset = Vector3.zero;
+    public float scale = 1.0f;
     
     [Header("Gun Properties")]
     public float fireRate = 1.0f;
