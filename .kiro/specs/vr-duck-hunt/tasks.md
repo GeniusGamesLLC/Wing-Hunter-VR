@@ -364,8 +364,8 @@
   - Test complete gameplay loop
   - _Requirements: 1.1, 1.2, 1.4, 6.1, 6.2, 7.4_
 
-- [ ] 18. Final polish and optimization
-- [ ] 18.1 Performance optimization
+- [-] 18. Final polish and optimization
+- [x] 18.1 Performance optimization
   - Profile frame rate and identify bottlenecks
   - Optimize duck count and spawn rates for stable 72 FPS
   - Add LOD to duck models if needed
@@ -504,15 +504,19 @@
 
 ## Future Improvements (Low Priority)
 
-- [ ] 27. Fix VR headset initial orientation
-- [ ] 27.1 Investigate and fix player facing backwards at game start
-  - VR headset tracking overrides XR Origin rotation at runtime
-  - Options to explore:
-    - Add recenter/reset view button (e.g., left menu button)
-    - Rotate XR Origin 180° at runtime based on headset direction
-    - Use XR Origin's RequestedTrackingOriginMode settings
-    - Add on-screen prompt to face forward before starting
-  - Test solution on Quest hardware
+- [x] 27. Fix VR headset initial orientation
+- [x] 27.1 Investigate and fix player facing backwards at game start
+  - Created VRRecenter script (Assets/Scripts/VR/VRRecenter.cs)
+  - Solution implemented:
+    - Auto-recenter on game start (1.5 second delay to allow headset tracking to stabilize)
+    - Manual recenter via left menu button or Y button on Quest controller
+    - Rotates XR Origin to align player's forward direction with game's forward (positive Z)
+  - Features:
+    - Automatic XR Origin detection at runtime
+    - Configurable target forward direction
+    - Debug logging for troubleshooting
+    - Works with any VR controller that has menu/secondary button
+  - Added VRRecenter GameObject to MainScene
   - _Requirements: 7.1_
 
 

@@ -164,6 +164,11 @@ public class DuckController : MonoBehaviour
         {
             destructionParticles.Play();
         }
+        else if (explosionPrefab != null && PerformanceManager.Instance != null)
+        {
+            // Use pooled particle from PerformanceManager
+            PerformanceManager.Instance.GetPooledParticle(explosionPrefab, transform.position, Quaternion.identity);
+        }
         else
         {
             // Create a simple particle effect if none assigned
@@ -183,6 +188,7 @@ public class DuckController : MonoBehaviour
     
     /// <summary>
     /// Fallback method to create a simple particle effect that works with URP
+    /// Optimized for VR performance with reduced particle count
     /// </summary>
     private void CreateFallbackDestructionEffect()
     {
@@ -192,29 +198,29 @@ public class DuckController : MonoBehaviour
         
         ParticleSystem particles = effectGO.AddComponent<ParticleSystem>();
         
-        // Configure main module for a nice explosion
+        // Configure main module for a nice explosion (optimized for VR)
         var main = particles.main;
         main.simulationSpace = ParticleSystemSimulationSpace.World;
         main.playOnAwake = true;
         main.loop = false;
-        main.maxParticles = 30;
-        main.startSpeed = new ParticleSystem.MinMaxCurve(3f, 8f);
-        main.startSize = new ParticleSystem.MinMaxCurve(0.05f, 0.15f);
-        main.startLifetime = new ParticleSystem.MinMaxCurve(0.5f, 1.5f);
+        main.maxParticles = 15; // Reduced from 30 for better performance
+        main.startSpeed = new ParticleSystem.MinMaxCurve(3f, 6f); // Slightly reduced
+        main.startSize = new ParticleSystem.MinMaxCurve(0.08f, 0.2f);
+        main.startLifetime = new ParticleSystem.MinMaxCurve(0.4f, 1.0f); // Shorter lifetime
         main.startColor = new Color(1f, 1f, 0.2f, 1f); // Bright yellow explosion
-        main.gravityModifier = 0.3f; // Some gravity for realistic fall
+        main.gravityModifier = 0.5f; // More gravity for faster cleanup
         
-        // Configure emission for burst
+        // Configure emission for burst (reduced count)
         var emission = particles.emission;
         emission.enabled = true;
         emission.rateOverTime = 0f;
-        emission.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0.0f, 30) });
+        emission.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0.0f, 15) }); // Reduced from 30
         
         // Configure shape for spherical explosion
         var shape = particles.shape;
         shape.enabled = true;
         shape.shapeType = ParticleSystemShapeType.Sphere;
-        shape.radius = 0.2f;
+        shape.radius = 0.15f; // Slightly smaller
         
         // Configure velocity over lifetime for outward explosion
         var velocityOverLifetime = particles.velocityOverLifetime;
@@ -222,35 +228,34 @@ public class DuckController : MonoBehaviour
         velocityOverLifetime.space = ParticleSystemSimulationSpace.Local;
         velocityOverLifetime.radial = new ParticleSystem.MinMaxCurve(2f);
         
-        // Configure size over lifetime for nice scaling
+        // Configure size over lifetime for nice scaling (simplified curve)
         var sizeOverLifetime = particles.sizeOverLifetime;
         sizeOverLifetime.enabled = true;
         AnimationCurve sizeCurve = new AnimationCurve();
         sizeCurve.AddKey(0f, 1f);
-        sizeCurve.AddKey(0.3f, 1.2f);
         sizeCurve.AddKey(1f, 0f);
         sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(1f, sizeCurve);
         
-        // Configure color over lifetime for fade out
+        // Configure color over lifetime for fade out (simplified gradient)
         var colorOverLifetime = particles.colorOverLifetime;
         colorOverLifetime.enabled = true;
         Gradient gradient = new Gradient();
         gradient.SetKeys(
             new GradientColorKey[] { 
                 new GradientColorKey(Color.yellow, 0.0f), 
-                new GradientColorKey(Color.red, 0.5f),
+                new GradientColorKey(new Color(1f, 0.5f, 0f), 0.5f), // Orange
                 new GradientColorKey(Color.gray, 1.0f) 
             },
             new GradientAlphaKey[] { 
                 new GradientAlphaKey(1.0f, 0.0f), 
-                new GradientAlphaKey(0.8f, 0.5f),
+                new GradientAlphaKey(0.5f, 0.5f),
                 new GradientAlphaKey(0.0f, 1.0f) 
             }
         );
         colorOverLifetime.color = gradient;
         
-        // Auto-destroy
-        Destroy(effectGO, 2f);
+        // Auto-destroy (shorter time)
+        Destroy(effectGO, 1.5f);
         particles.Play();
     }
     

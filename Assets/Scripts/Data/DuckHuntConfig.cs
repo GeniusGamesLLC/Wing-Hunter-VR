@@ -39,6 +39,15 @@ using UnityEngine;
         [Range(0f, 1f)]
         public float HapticIntensity = 0.6f;
         
+        [Header("Performance Configuration")]
+        [Tooltip("Maximum number of ducks that can be active at once")]
+        [Range(3, 20)]
+        public int MaxConcurrentDucks = 10;
+        
+        [Tooltip("Target frame rate for VR (72 for Quest)")]
+        [Range(60, 120)]
+        public int TargetFrameRate = 72;
+        
         /// <summary>
         /// Gets the difficulty settings for a specific level
         /// </summary>

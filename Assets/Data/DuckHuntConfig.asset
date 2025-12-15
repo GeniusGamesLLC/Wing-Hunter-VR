@@ -38,3 +38,5 @@ MonoBehaviour:
     ScoreThreshold: 300
   SoundEffectVolume: 0.8
   HapticIntensity: 0.6
+  MaxConcurrentDucks: 10
+  TargetFrameRate: 72

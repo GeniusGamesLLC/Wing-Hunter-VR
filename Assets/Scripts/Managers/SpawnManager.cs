@@ -41,6 +41,8 @@ public class SpawnManager : MonoBehaviour
     private Coroutine spawnCoroutine;
     private bool isSpawning = false;
     private ScoreManager scoreManager;
+    private PerformanceManager performanceManager;
+    private int activeDuckCount = 0;
     
     private void Awake()
     {
@@ -55,6 +57,13 @@ public class SpawnManager : MonoBehaviour
         if (scoreManager == null)
         {
             Debug.LogWarning("SpawnManager: ScoreManager not found in scene. Missed ducks won't be tracked.");
+        }
+        
+        // Find PerformanceManager reference
+        performanceManager = FindObjectOfType<PerformanceManager>();
+        if (performanceManager != null)
+        {
+            Debug.Log("SpawnManager: PerformanceManager found - dynamic spawn optimization enabled");
         }
         
         // Auto-discover spawn and target points from parent objects
@@ -202,11 +211,25 @@ public class SpawnManager : MonoBehaviour
     {
         while (isSpawning)
         {
-            // Wait for the spawn interval
-            yield return new WaitForSeconds(currentSpawnInterval);
+            // Get adjusted spawn interval from PerformanceManager if available
+            float adjustedInterval = currentSpawnInterval;
+            if (performanceManager != null)
+            {
+                adjustedInterval = performanceManager.GetAdjustedSpawnInterval(currentSpawnInterval);
+            }
             
-            // Spawn a duck if still spawning
-            if (isSpawning)
+            // Wait for the spawn interval
+            yield return new WaitForSeconds(adjustedInterval);
+            
+            // Check if we can spawn based on performance limits
+            bool canSpawn = true;
+            if (performanceManager != null)
+            {
+                canSpawn = performanceManager.CanSpawnDuck(activeDuckCount);
+            }
+            
+            // Spawn a duck if still spawning and within limits
+            if (isSpawning && canSpawn)
             {
                 SpawnDuck();
             }
@@ -242,6 +265,15 @@ public class SpawnManager : MonoBehaviour
             // Subscribe to duck events for cleanup and scoring
             duckController.OnDestroyed += OnDuckDestroyed;
             duckController.OnEscaped += OnDuckEscaped;
+            
+            // Track active duck count for performance management
+            activeDuckCount++;
+            
+            // Setup LOD if PerformanceManager is available
+            if (performanceManager != null)
+            {
+                performanceManager.SetupDuckLOD(duckController.gameObject);
+            }
         }
         else
         {
@@ -307,6 +339,9 @@ public class SpawnManager : MonoBehaviour
         duck.OnDestroyed -= OnDuckDestroyed;
         duck.OnEscaped -= OnDuckEscaped;
         
+        // Decrement active duck count
+        activeDuckCount = Mathf.Max(0, activeDuckCount - 1);
+        
         Debug.Log("SpawnManager: Duck was destroyed (hit)");
         
         // Add score for hitting the duck
@@ -328,6 +363,9 @@ public class SpawnManager : MonoBehaviour
         // Unsubscribe from events to prevent memory leaks
         duck.OnDestroyed -= OnDuckDestroyed;
         duck.OnEscaped -= OnDuckEscaped;
+        
+        // Decrement active duck count
+        activeDuckCount = Mathf.Max(0, activeDuckCount - 1);
         
         Debug.Log("SpawnManager: Duck escaped");
         
@@ -424,5 +462,22 @@ public class SpawnManager : MonoBehaviour
     public float GetCurrentDuckSpeed()
     {
         return currentDuckSpeed;
+    }
+    
+    /// <summary>
+    /// Gets the current number of active ducks in the scene
+    /// </summary>
+    /// <returns>Number of active ducks</returns>
+    public int GetActiveDuckCount()
+    {
+        return activeDuckCount;
+    }
+    
+    /// <summary>
+    /// Resets the active duck count (useful when restarting game)
+    /// </summary>
+    public void ResetActiveDuckCount()
+    {
+        activeDuckCount = 0;
     }
 }
