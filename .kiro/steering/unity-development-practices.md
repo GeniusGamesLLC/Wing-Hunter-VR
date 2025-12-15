@@ -39,18 +39,71 @@ When working with Unity projects, follow these practices to prevent crashes and 
 - Use Unity's built-in logging (`Debug.Log`, `Debug.LogWarning`, `Debug.LogError`)
 - Test scripts in isolation when possible
 
-### 6. MCP Server Interaction
-- Allow Unity time to process changes between MCP calls
-- Check Unity's responsiveness with telemetry status calls
+### 6. MCP Server Interaction - CRITICAL
+- **NEVER make parallel/simultaneous MCP calls** - Always wait for one call to complete before making another
+- **ONE MCP call at a time** - Do not batch multiple Unity operations in the same turn
+- **STOP ON FIRST ERROR** - If any MCP call fails or returns an error, STOP immediately and ask user to check Unity
+- **NO RETRIES** - Do not retry failed MCP calls; ask user to verify Unity status first
+- Allow Unity time to process changes between MCP calls (wait 2-3 seconds mentally)
+- Check Unity's responsiveness with telemetry status calls before any operation
 - Use batch operations sparingly to avoid overwhelming Unity
 - Monitor Unity process stability during automated operations
 
+### 6.1 Unity MCP Known Issues (localhost:8080 HTTP Server Version)
+- **`get_components` (plural) is BROKEN** - Do NOT use `action="get_components"` - it will fail
+- **`get_component` (singular) WORKS** - Use `action="get_component"` with `component_name` parameter instead
+- When you need component info, query one component at a time using `get_component`
+
 ### 7. Task Execution Strategy
+- **ALWAYS verify Unity connection before starting any Unity task**
 - Execute tasks one at a time, not in batches
 - Wait for explicit user confirmation before proceeding to next task
 - Include compilation verification steps in task workflows
 - **Save scene and project after each major step**
 - Stop and ask for guidance if Unity becomes unresponsive
+- **Never create scripts as workarounds when Unity is disconnected**
+
+### 8. Direct Problem Solving - CRITICAL
+- **ALWAYS fix root causes directly using Unity MCP commands**
+- **NEVER create "fixer" scripts as band-aids for Unity issues**
+- **Use Unity MCP to investigate, identify, and fix problems directly**
+- **Scripts that "fix" Unity scene issues often cause more problems**
+- **Examples of direct fixes:**
+  - Duplicate objects → Delete duplicates with Unity MCP
+  - Wrong materials → Apply correct materials with Unity MCP  
+  - Missing components → Add components with Unity MCP
+  - Wrong settings → Modify settings with Unity MCP
+- **Avoid creating scripts that:**
+  - "Fix" materials at runtime
+  - "Setup" scene objects automatically
+  - "Correct" Unity configuration issues
+  - Work around Unity problems instead of solving them
+
+### 9. Fix Assets at the Source - CRITICAL
+- **ALWAYS fix prefabs, models, and assets directly** instead of adding code workarounds
+- **When something is oriented wrong** (rotated, flipped, backwards):
+  - Fix the prefab's transform rotation directly
+  - Fix the model import settings
+  - Do NOT add "invert" toggles or rotation compensation in code
+- **When a muzzle point, spawn point, or reference point is wrong:**
+  - Fix the position/rotation in the prefab itself
+  - Do NOT add offset calculations in scripts
+- **Examples of proper fixes:**
+  - Gun pointing backwards → Rotate the prefab 180° on Y axis
+  - Muzzle forward is inverted → Fix muzzle point rotation in prefab
+  - Model imported sideways → Fix import rotation settings or prefab root
+- **Code workarounds to avoid:**
+  - `invertDirection` or `flipAxis` booleans
+  - Runtime rotation compensation (`Quaternion.Euler(0, 180, 0)`)
+  - Negative direction multipliers (`-transform.forward`)
+  - Offset values that compensate for wrong asset orientation
+- **Why this matters:** Workarounds create technical debt, confuse future developers, and often break when assets are updated or reused
+
+### 10. Git Commit Efficiency
+- **Keep commit responses concise** - Don't repeat the commit message details in the response
+- The commit message already contains all necessary information
+- Simply confirm "Changes committed successfully" or similar brief acknowledgment
+- Avoid verbose summaries that duplicate what's already in the commit message
 
 ## Unity-Specific Code Patterns
 
@@ -150,14 +203,26 @@ When modifying scenes, follow this safe workflow:
 5. **Test**: Test the change works as expected
 6. **Repeat**: Only then proceed to next modification
 
-## Unity Connection Issues
+## Unity Connection Verification - CRITICAL
 
-If Unity MCP commands fail with "No Unity plugins are currently connected":
-1. **Stop all automated operations immediately**
-2. **Ask the user to check Unity status**: "Unity seems to be disconnected. Please check if Unity is running and the MCP connection is active, then let me know when it's ready to continue."
-3. **Wait for user confirmation** before resuming any Unity operations
-4. **Do not attempt to continue** with Unity-related tasks until connection is restored
-5. **Use file system operations** as fallback for script creation when Unity is unavailable
+**BEFORE ANY Unity MCP operation, ALWAYS verify connection first:**
+
+1. **MANDATORY**: Start every Unity task by running `mcp_unityMCP_manage_editor` with `action="telemetry_status"`
+2. **MANDATORY**: Follow up with a test command like `mcp_unityMCP_manage_scene` with `action="get_active"`
+3. **If EITHER command fails**: STOP immediately and ask user to fix Unity connection
+4. **NEVER proceed** with Unity operations if connection verification fails
+5. **NEVER create scripts as workarounds** when Unity is disconnected
+
+## Unity Connection Issues - ABSOLUTE RULES
+
+If Unity MCP commands fail with "No Unity plugins are currently connected" OR any Unity command returns an error OR returns "Python error":
+1. **STOP IMMEDIATELY** - Do not make any more MCP calls
+2. **Do not retry** - Even one retry can crash Unity
+3. **Ask the user to check Unity status**: "Unity seems to be having issues. Please check if Unity is running and responsive, then let me know when it's ready to continue."
+4. **Wait for explicit user confirmation** ("Unity is ready" or similar) before resuming
+5. **Do not attempt to continue** with Unity-related tasks until user confirms
+6. **Do not create scripts as fallback solutions** - fix the connection first
+7. **After user confirms ready**: Start fresh with telemetry_status check before any operation
 
 ## Emergency Recovery
 
