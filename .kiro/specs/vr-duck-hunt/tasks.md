@@ -682,15 +682,15 @@
 
 ## Scene Cleanup and Organization
 
-- [ ] 37. Clean up and organize scene hierarchy
-- [ ] 37.1 Audit scene for unused GameObjects
+- [x] 37. Clean up and organize scene hierarchy
+- [x] 37.1 Audit scene for unused GameObjects
   - Review all root-level GameObjects in scene
   - Remove any test objects, duplicates, or unused items
   - Remove the standalone "Duck" object if it's not needed (ducks come from pool)
   - Remove "DuckExplosionEffect" if not being used properly
   - _Requirements: 7.1_
 
-- [ ] 37.2 Organize scene hierarchy with parent containers
+- [x] 37.2 Organize scene hierarchy with parent containers
   - Group related objects under empty parent GameObjects:
     - "--- Environment ---" (Ground, Skybox, Lighting)
     - "--- Managers ---" (GameManager, ScoreManager, SpawnManager, UIManager, etc.)
@@ -700,7 +700,7 @@
   - Use "---" prefix for organizational parents (Unity convention)
   - _Requirements: 7.1_
 
-- [ ] 37.3 Verify all component references are properly wired
+- [x] 37.3 Verify all component references are properly wired
   - Check each manager has its required references assigned
   - Remove any broken or missing script references
   - Ensure no "Missing Script" components exist
@@ -708,7 +708,7 @@
 
 
 
-- [ ] 37.4 Resolve WorldScoreboard prefab overrides
+- [x] 37.4 Resolve WorldScoreboard prefab overrides
   - Scene instance of WorldScoreboard has overrides from prefab
   - Investigate what properties were changed on the instance
   - Decide whether to:
