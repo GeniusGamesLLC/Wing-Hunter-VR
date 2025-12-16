@@ -548,8 +548,8 @@
   - Test in VR to verify seamless horizon effect
   - _Requirements: 10.1_
 
-- [ ] 39. Create fully enclosed fenced play area
-- [ ] 39.1 Create wooden fence prefab
+- [x] 39. Create fully enclosed fenced play area
+- [x] 39.1 Create wooden fence prefab
   - Create simple wooden post-and-rail fence section (or use primitives)
   - 3-4 horizontal rails, rustic wood appearance
   - Create two variants: low fence (~1.2m for front) and tall fence (~1.5m for sides/back)
@@ -557,7 +557,7 @@
   - Add colliders to fence sections
   - _Requirements: 10.3_
 
-- [ ] 39.2 Build enclosed fence perimeter in scene
+- [x] 39.2 Build enclosed fence perimeter in scene
   - Create ~6m x 6m fenced play area
   - Front fence: low (~1.2m) for shooting over, ~6m wide
   - Side fences: taller (~1.5m), ~6m deep on each side
@@ -566,13 +566,13 @@
   - Center the play area on player starting position
   - _Requirements: 10.2, 10.3_
 
-- [ ] 39.3 Verify spawn points are beyond the front fence
+- [x] 39.3 Verify spawn points are beyond the front fence
   - Ensure all duck spawn points are positioned beyond the front fence
   - Ducks should fly in the area beyond the fence, not in the player area
   - Adjust existing spawn points if needed
   - _Requirements: 2.2, 10.3_
 
-- [ ] 39.4 Move scoreboard outside the fence
+- [x] 39.4 Move scoreboard outside the fence
   - Relocate WorldScoreboard to be outside the front fence, in the duck zone
   - Position it facing back toward the player (arcade-style scoreboard)
   - Place at comfortable viewing height and distance
