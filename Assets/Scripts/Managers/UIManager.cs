@@ -32,10 +32,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private DifficultyFeedbackEffect difficultyEffect;
     [SerializeField] private float feedbackDisplayDuration = 2f;
     
-    [Header("Configuration")]
-    [SerializeField] private Vector3 canvasPosition = new Vector3(0, 2, 3);
-    [SerializeField] private Vector3 canvasRotation = new Vector3(0, 0, 0);
-    [SerializeField] private float canvasScale = 0.01f;
+
     
     // Manager references
     private GameManager gameManager;
@@ -70,12 +67,18 @@ public class UIManager : MonoBehaviour
         AutoDiscoverWorldSpaceScoreboard();
         
         // Find Canvas if not assigned (legacy/fallback)
+        // Skip PedestalCanvas as it has its own positioning
         if (worldSpaceCanvas == null)
         {
-            worldSpaceCanvas = FindObjectOfType<Canvas>();
-            if (worldSpaceCanvas != null)
+            Canvas[] allCanvases = FindObjectsOfType<Canvas>();
+            foreach (Canvas canvas in allCanvases)
             {
-                Debug.Log("UIManager: Auto-discovered Canvas");
+                // Skip the PedestalCanvas - it's managed by StartPedestalController
+                if (canvas.name == "PedestalCanvas") continue;
+                
+                worldSpaceCanvas = canvas;
+                Debug.Log($"UIManager: Auto-discovered Canvas: {canvas.name}");
+                break;
             }
         }
         
@@ -305,16 +308,10 @@ public class UIManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Initializes the UI elements and canvas setup
+    /// Initializes the UI elements
     /// </summary>
     private void InitializeUI()
     {
-        // Set up world space canvas if not already configured
-        if (worldSpaceCanvas != null)
-        {
-            SetupWorldSpaceCanvas();
-        }
-        
         // Initialize score display
         UpdateScoreDisplay(0);
         UpdateMissedDucksDisplay();
@@ -336,24 +333,6 @@ public class UIManager : MonoBehaviour
         Debug.Log("UIManager: UI initialized");
     }
     
-    /// <summary>
-    /// Sets up the world space canvas with proper positioning and scale
-    /// </summary>
-    private void SetupWorldSpaceCanvas()
-    {
-        // Set render mode to World Space
-        worldSpaceCanvas.renderMode = RenderMode.WorldSpace;
-        
-        // Position the canvas in front of the player
-        worldSpaceCanvas.transform.position = canvasPosition;
-        worldSpaceCanvas.transform.rotation = Quaternion.Euler(canvasRotation);
-        worldSpaceCanvas.transform.localScale = Vector3.one * canvasScale;
-        
-        // Configure canvas properties for VR
-        worldSpaceCanvas.sortingOrder = 1;
-        
-        Debug.Log($"UIManager: World space canvas configured at position {canvasPosition}");
-    }
     
     /// <summary>
     /// Updates the score display text
@@ -478,31 +457,6 @@ public class UIManager : MonoBehaviour
         }
     }
     
-    /// <summary>
-    /// Sets the canvas position (useful for runtime adjustments)
-    /// </summary>
-    /// <param name="position">New canvas position</param>
-    public void SetCanvasPosition(Vector3 position)
-    {
-        canvasPosition = position;
-        if (worldSpaceCanvas != null)
-        {
-            worldSpaceCanvas.transform.position = position;
-        }
-    }
-    
-    /// <summary>
-    /// Sets the canvas scale (useful for runtime adjustments)
-    /// </summary>
-    /// <param name="scale">New canvas scale</param>
-    public void SetCanvasScale(float scale)
-    {
-        canvasScale = scale;
-        if (worldSpaceCanvas != null)
-        {
-            worldSpaceCanvas.transform.localScale = Vector3.one * scale;
-        }
-    }
     
     /// <summary>
     /// Updates the difficulty display text
@@ -574,15 +528,5 @@ public class UIManager : MonoBehaviour
         }
     }
     
-    #if UNITY_EDITOR
-    [System.Diagnostics.Conditional("UNITY_EDITOR")]
-    private void OnValidate()
-    {
-        // Ensure canvas scale is positive
-        if (canvasScale <= 0)
-        {
-            canvasScale = 0.01f;
-        }
-    }
-    #endif
+
 }

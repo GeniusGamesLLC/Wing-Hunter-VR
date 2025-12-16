@@ -346,7 +346,7 @@
     - ✅ VR controller integration
     - ✅ Scene setup with spawn points and environment
 
-- [ ] 17. Build and test on Meta Quest
+- [x] 17. Build and test on Meta Quest
 - [x] 17.1 Configure build settings
   - Set build target to Android
   - Configure XR settings for Oculus
@@ -598,20 +598,29 @@
   - Ensure player cannot teleport beyond any fence
   - _Requirements: 10.5_
 
-- [ ] 31. Create game start pedestal/table
-- [ ] 31.1 Design and create start game pedestal
+- [x] 31. Create game start pedestal/table
+- [x] 31.1 Design and create start game pedestal
   - Create a table or pedestal GameObject in front of player
   - Add a large "START GAME" button on the pedestal
+  - **Use XRI sample prefabs from:** `Assets/Samples/XR Interaction Toolkit/3.3.0/Starter Assets/DemoSceneAssets/Prefabs/`
+    - `Interactables/Push Button.prefab` - 3D physical poke button for start/restart
+    - `UI/TextButton.prefab` - Alternative UI button option
+    - `UI/ModalSingleButton.prefab` - Modal dialog with button
+  - Reference `Poke Interactions Sample.prefab` for poke button setup example
   - Button should be interactable with VR controller (poke or ray)
   - Wire button to GameManager.StartGame()
   - Remove auto-start behavior (VRGameAutoStart)
   - Game should wait in Idle state until player presses start
   - _Requirements: 5.4_
 
-- [ ] 31.2 Add game state UI to pedestal
+- [x] 31.2 Add game state UI to pedestal
   - Show "Press to Start" text when game is idle
   - Show "Game Over - Press to Restart" when game ends
   - Display high score on pedestal
+  - **Available XRI UI prefabs in** `DemoSceneAssets/Prefabs/UI/`:
+    - `TextButton.prefab`, `Icon Button.prefab`, `Icon Toggle.prefab`
+    - `Interactive Controls.prefab` - Collection of UI controls
+    - `Dropdown.prefab`, `MinMaxSlider.prefab`, `Text Toggle.prefab`
   - _Requirements: 5.2, 5.3_
 
 - [ ] 32. Create gun display rack

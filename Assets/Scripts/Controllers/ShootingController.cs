@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.XR.Interaction.Toolkit.Interactors;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
 
@@ -33,6 +34,9 @@ public class ShootingController : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private bool allowGunSwitching = true;
     
+    [Header("XR Interactor (for UI detection)")]
+    [SerializeField] private NearFarInteractor rightHandInteractor;
+    
     // Private fields
     private bool triggerPressed = false;
     private bool wasAButtonPressed = false;
@@ -57,6 +61,18 @@ public class ShootingController : MonoBehaviour
         
         if (gunSelectionManager == null)
             gunSelectionManager = FindObjectOfType<GunSelectionManager>();
+        
+        // Try to find the right hand Near-Far Interactor for UI detection
+        if (rightHandInteractor == null)
+        {
+            var rightController = GameObject.Find("Right Controller");
+            if (rightController != null)
+            {
+                var nearFar = rightController.GetComponentInChildren<NearFarInteractor>();
+                if (nearFar != null)
+                    rightHandInteractor = nearFar;
+            }
+        }
         
         InitializeXRDevice();
     }
@@ -147,7 +163,11 @@ public class ShootingController : MonoBehaviour
         {
             bool isTriggerPressed = triggerValue > 0.5f;
             
-            if (isTriggerPressed && !wasRightTriggerPressed && !triggerPressed)
+            // Don't shoot if the right hand is currently selecting/hovering a UI interactable
+            bool isInteractingWithUI = rightHandInteractor != null && 
+                (rightHandInteractor.hasSelection || rightHandInteractor.hasHover);
+            
+            if (isTriggerPressed && !wasRightTriggerPressed && !triggerPressed && !isInteractingWithUI)
             {
                 triggerPressed = true;
                 PerformShot();
