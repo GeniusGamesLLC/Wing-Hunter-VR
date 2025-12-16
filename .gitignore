@@ -103,3 +103,8 @@ InitTestScene*.unity*
 # Build artifacts
 Build_BackUpThisFolder_ButDontShipItWithYourGame/
 *_BurstDebugInformation_DoNotShip/
+
+# XR Simulation settings (editor-only, not needed for builds)
+/[Aa]ssets/XR/UserSimulationSettings/
+/[Aa]ssets/XR/Resources/XRSimulationRuntimeSettings.asset
+/[Aa]ssets/XR/Resources/XRSimulationRuntimeSettings.asset.meta
