@@ -533,15 +533,15 @@
 
 ## Game Polish - Gameplay Area Design
 
-- [ ] 38. Create infinite ground visual effect
-- [ ] 38.1 Create infinite ground shader/material
+- [x] 38. Create infinite ground visual effect
+- [x] 38.1 Create infinite ground shader/material
   - Create URP-compatible material for ground plane
   - Add gradient fade at edges that blends into skybox color
   - Ground should appear to extend infinitely in all directions
   - Ensure shader is Quest-compatible (mobile GPU)
   - _Requirements: 10.1_
 
-- [ ] 38.2 Configure ground plane for infinite effect
+- [x] 38.2 Configure ground plane for infinite effect
   - Scale ground plane large enough to fill peripheral vision
   - Position ground at Y=0 with player standing on it
   - Apply infinite ground material

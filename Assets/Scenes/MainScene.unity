@@ -2219,9 +2219,6 @@ MonoBehaviour:
   difficultyFeedbackText: {fileID: 0}
   difficultyEffect: {fileID: 0}
   feedbackDisplayDuration: 2
-  canvasPosition: {x: 0, y: 2, z: 3}
-  canvasRotation: {x: 0, y: 0, z: 0}
-  canvasScale: 0.01
 --- !u!4 &748151558
 Transform:
   m_ObjectHideFlags: 0
@@ -9685,6 +9682,7 @@ GameObject:
   - component: {fileID: 1547046608}
   - component: {fileID: 1547046607}
   - component: {fileID: 1547046611}
+  - component: {fileID: 1547046612}
   m_Layer: 0
   m_Name: Ground
   m_TagString: Untagged
@@ -9717,7 +9715,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 169723e7f4e0e4fc299beba5379ecfaa, type: 2}
+  - {fileID: 2100000, guid: b2c3d4e5f6789012345678abcdef0123, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -9780,7 +9778,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: -0.5, z: 0}
-  m_LocalScale: {x: 50, y: 1, z: 50}
+  m_LocalScale: {x: 200, y: 1, z: 200}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 125497844}
@@ -9868,6 +9866,24 @@ MonoBehaviour:
   m_Teleporting:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1547046612
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1547046606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2fa7731a1ecf44cb7b8d121eb5f556d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InfiniteGroundController
+  playerTransform: {fileID: 0}
+  groundRenderer: {fileID: 0}
+  groundColor: {r: 0.25, g: 0.45, b: 0.2, a: 1}
+  horizonColor: {r: 0.6, g: 0.75, b: 0.85, a: 0}
+  fadeStartDistance: 30
+  fadeEndDistance: 80
 --- !u!21 &1550797739
 Material:
   serializedVersion: 8
