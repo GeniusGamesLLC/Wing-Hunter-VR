@@ -13,8 +13,8 @@ Shader "Custom/InfiniteGround"
     {
         Tags 
         { 
-            "RenderType" = "Transparent"
-            "Queue" = "Transparent"
+            "RenderType" = "Opaque"
+            "Queue" = "Geometry-10"
             "RenderPipeline" = "UniversalPipeline"
         }
         
@@ -23,8 +23,8 @@ Shader "Custom/InfiniteGround"
             Name "ForwardLit"
             Tags { "LightMode" = "UniversalForward" }
             
-            Blend SrcAlpha OneMinusSrcAlpha
-            ZWrite Off
+            Blend Off
+            ZWrite On
             Cull Back
             
             HLSLPROGRAM
@@ -86,11 +86,9 @@ Shader "Custom/InfiniteGround"
                 // Calculate fade factor based on distance
                 float fadeFactor = saturate((dist - _FadeStart) / (_FadeEnd - _FadeStart));
                 
-                // Lerp between ground color and horizon color
+                // Lerp between ground color and horizon color (opaque blend)
                 half4 color = lerp(_BaseColor, _HorizonColor, fadeFactor);
-                
-                // Fade out alpha at the edges for seamless horizon blend
-                color.a = lerp(1.0, 0.0, fadeFactor * fadeFactor);
+                color.a = 1.0;
                 
                 // Apply fog
                 color.rgb = MixFog(color.rgb, input.fogFactor);

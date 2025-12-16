@@ -344,6 +344,7 @@ MonoBehaviour:
   targetLayer:
     serializedVersion: 2
     m_Bits: 4294967295
+  excludeIgnoreShootRayLayer: 1
   audioSource: {fileID: 0}
   hitSound: {fileID: 8300000, guid: 2203773368e4340d98c114f55c2dd7fd, type: 3}
   missSound: {fileID: 8300000, guid: 4d6281aa604094f04839cffa502096c0, type: 3}
@@ -10292,6 +10293,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 339554420}
     m_Modifications:
+    - target: {fileID: 1717458295336460088, guid: 76f3439a0ae796e4b81bee3f91f888ee, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1811122272821274886, guid: 76f3439a0ae796e4b81bee3f91f888ee, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0.029999971
