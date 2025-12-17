@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 378a141d6474444359792a6388ac4169, type: 3}
+  m_Name: SpawnPointConfig
+  m_EditorClassIdentifier: Assembly-CSharp::DuckHunt.Data.SpawnPointConfig
+  SpawnIndicatorMaterial: {fileID: 2100000, guid: b634951d18b7949d2b448b999191d2a5, type: 2}
+  TargetIndicatorMaterial: {fileID: 2100000, guid: 83cced15a52fb49a7960f42c2a1ca22a, type: 2}
+  IndicatorScale: 0.3
+  ShowIndicatorsInEditor: 1
+  ShowIndicatorsInPlayMode: 0
+  DebugShowIndicators: 0
+  DefaultOccluderPrefab: {fileID: 4670392468838920433, guid: ea4ee894f08a14a48b36889074d32a34, type: 3}
+  OccluderOffset: {x: 0, y: 0, z: 0}
+  OccluderScale: 0.5
