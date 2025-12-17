@@ -25,6 +25,23 @@ public class DuckController : MonoBehaviour
     [SerializeField] private float deathFallSpeed = 8f;
     [SerializeField] private float deathSpinSpeed = 720f;
     
+    [Header("Spawn Animation")]
+    [SerializeField] private float maxSpawnDuration = 0.5f;
+    [SerializeField] private float spawnStartScale = 0.1f;
+    
+    [Header("Escape Animation")]
+    [SerializeField] private float maxEscapeDuration = 0.4f;
+    
+    [Header("Animation Timing")]
+    [Tooltip("Minimum time duck must be fully visible and shootable (between spawn and escape)")]
+    [SerializeField] private float minFullyVisibleTime = 0.5f;
+    [Tooltip("Max percentage of flight time that can be used for spawn+escape animations")]
+    [SerializeField] private float maxAnimationTimePercent = 0.4f;
+    
+    // Calculated animation durations for current flight
+    private float actualSpawnDuration;
+    private float actualEscapeDuration;
+    
     // Events
     public event Action<DuckController> OnDestroyed;
     public event Action<DuckController> OnEscaped;
@@ -34,12 +51,48 @@ public class DuckController : MonoBehaviour
     private bool isMoving = false;
     private bool isDestroyed = false;
     private bool isPlayingDeathAnimation = false;
+    private bool isSpawning = false;
+    private bool isEscaping = false;
+    private Material[] originalMaterials;
+    private Material[] fadeMaterials;
     
     private void Awake()
     {
         animator = GetComponent<Animator>();
         duckCollider = GetComponent<CapsuleCollider>();
         renderers = GetComponentsInChildren<Renderer>();
+        CacheMaterials();
+    }
+    
+    /// <summary>
+    /// Cache original materials and create fade-capable copies
+    /// </summary>
+    private void CacheMaterials()
+    {
+        if (renderers == null || renderers.Length == 0) return;
+        
+        // Count total materials
+        int totalMaterials = 0;
+        foreach (var r in renderers)
+        {
+            if (r != null) totalMaterials += r.materials.Length;
+        }
+        
+        originalMaterials = new Material[totalMaterials];
+        fadeMaterials = new Material[totalMaterials];
+        
+        int index = 0;
+        foreach (var r in renderers)
+        {
+            if (r == null) continue;
+            foreach (var mat in r.materials)
+            {
+                originalMaterials[index] = mat;
+                // Create instance for fading (will be configured when needed)
+                fadeMaterials[index] = new Material(mat);
+                index++;
+            }
+        }
     }
     
     private void Start()
@@ -53,7 +106,7 @@ public class DuckController : MonoBehaviour
     
     private void Update()
     {
-        if (isMoving && !isDestroyed && !isPlayingDeathAnimation)
+        if (isMoving && !isDestroyed && !isPlayingDeathAnimation && !isSpawning && !isEscaping)
         {
             MoveDuck();
             CheckIfReachedTarget();
@@ -82,18 +135,128 @@ public class DuckController : MonoBehaviour
             transform.rotation = Quaternion.LookRotation(direction);
         }
         
-        // Start moving
-        isMoving = true;
+        // Reset state
         isDestroyed = false;
+        isEscaping = false;
         
-        // Enable collider
+        // Calculate animation durations based on flight time
+        CalculateAnimationDurations();
+        
+        // Disable collider during spawn animation
         if (duckCollider != null)
         {
-            duckCollider.enabled = true;
+            duckCollider.enabled = false;
         }
         
         // Start flying animation
         SetAnimationState(true);
+        
+        // Start spawn animation (will enable movement and collider when done)
+        StartCoroutine(PlaySpawnAnimation());
+    }
+    
+    /// <summary>
+    /// Calculate spawn and escape animation durations based on flight time.
+    /// Ensures duck has minimum fully-visible time for gameplay.
+    /// Future-proof: works with single path or multi-waypoint paths.
+    /// </summary>
+    private void CalculateAnimationDurations()
+    {
+        // Estimate total flight time (for single path, this is exact)
+        // For future multi-waypoint paths, this would be the first segment time
+        float distance = Vector3.Distance(startPosition, TargetPosition);
+        float estimatedFlightTime = distance / FlightSpeed;
+        
+        // Calculate max time available for animations
+        float maxAnimationTime = estimatedFlightTime * maxAnimationTimePercent;
+        
+        // Ensure we have minimum fully visible time
+        float availableAnimationTime = Mathf.Max(0f, estimatedFlightTime - minFullyVisibleTime);
+        
+        // Use the smaller of the two constraints
+        float totalAnimationBudget = Mathf.Min(maxAnimationTime, availableAnimationTime);
+        
+        // Split budget between spawn and escape (spawn gets slightly more)
+        float spawnRatio = 0.55f;
+        float escapeRatio = 0.45f;
+        
+        // Calculate actual durations, capped by max values
+        actualSpawnDuration = Mathf.Min(maxSpawnDuration, totalAnimationBudget * spawnRatio);
+        actualEscapeDuration = Mathf.Min(maxEscapeDuration, totalAnimationBudget * escapeRatio);
+        
+        // Ensure minimum animation time if we have any budget (avoid jarring instant transitions)
+        float minAnimDuration = 0.1f;
+        if (totalAnimationBudget > minAnimDuration * 2)
+        {
+            actualSpawnDuration = Mathf.Max(minAnimDuration, actualSpawnDuration);
+            actualEscapeDuration = Mathf.Max(minAnimDuration, actualEscapeDuration);
+        }
+        else if (totalAnimationBudget <= 0)
+        {
+            // Very short flight - skip animations entirely
+            actualSpawnDuration = 0f;
+            actualEscapeDuration = 0f;
+        }
+    }
+    
+    /// <summary>
+    /// Plays spawn animation - fade in and scale up
+    /// </summary>
+    private IEnumerator PlaySpawnAnimation()
+    {
+        isSpawning = true;
+        isMoving = false;
+        
+        // Skip animation if duration is zero (very short flight)
+        if (actualSpawnDuration <= 0f)
+        {
+            transform.localScale = Vector3.one;
+            SetAlpha(1f);
+            isSpawning = false;
+            isMoving = true;
+            if (duckCollider != null) duckCollider.enabled = true;
+            yield break;
+        }
+        
+        float elapsed = 0f;
+        
+        // Start small and transparent
+        transform.localScale = Vector3.one * spawnStartScale;
+        SetAlpha(0f);
+        
+        while (elapsed < actualSpawnDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / actualSpawnDuration;
+            
+            // Ease out curve for smoother feel
+            float easedT = 1f - Mathf.Pow(1f - t, 2f);
+            
+            // Scale up
+            float scale = Mathf.Lerp(spawnStartScale, 1f, easedT);
+            transform.localScale = Vector3.one * scale;
+            
+            // Fade in
+            SetAlpha(easedT);
+            
+            // Move while spawning (so it doesn't just sit there)
+            MoveDuck();
+            
+            yield return null;
+        }
+        
+        // Ensure final state
+        transform.localScale = Vector3.one;
+        SetAlpha(1f);
+        
+        isSpawning = false;
+        isMoving = true;
+        
+        // Enable collider now that spawn is complete
+        if (duckCollider != null)
+        {
+            duckCollider.enabled = true;
+        }
     }
     
     /// <summary>
@@ -105,14 +268,23 @@ public class DuckController : MonoBehaviour
     }
     
     /// <summary>
-    /// Check if the duck has reached its target position and trigger escape
+    /// Check if the duck should start escaping (approaching target) or has reached target
     /// </summary>
     private void CheckIfReachedTarget()
     {
         float distanceToTarget = Vector3.Distance(transform.position, TargetPosition);
         
-        // If very close to target (within 0.1 units), consider it reached
-        if (distanceToTarget < 0.1f)
+        // Calculate distance at which to start escape animation
+        // Duck should start fading when it's (escape duration * speed) away from target
+        float escapeStartDistance = actualEscapeDuration * FlightSpeed;
+        
+        // Start escape animation when approaching target (so it fades while moving)
+        if (distanceToTarget <= escapeStartDistance && !isEscaping)
+        {
+            TriggerEscape();
+        }
+        // Fallback: if very close and somehow not escaping yet
+        else if (distanceToTarget < 0.1f && !isEscaping)
         {
             TriggerEscape();
         }
@@ -185,12 +357,73 @@ public class DuckController : MonoBehaviour
     }
     
     /// <summary>
-    /// Called when the duck reaches the end of its path without being hit
+    /// Called when the duck approaches the end of its path without being hit
     /// </summary>
     private void TriggerEscape()
     {
-        if (isDestroyed) return; // Already destroyed
+        if (isDestroyed || isEscaping) return; // Already destroyed or escaping
         
+        // Don't stop moving - duck continues flying while fading
+        // isMoving stays true so escape animation can move the duck
+        
+        // Start escape animation (will notify when done)
+        StartCoroutine(PlayEscapeAnimation());
+    }
+    
+    /// <summary>
+    /// Plays escape animation - fade out and scale down while continuing to fly
+    /// </summary>
+    private IEnumerator PlayEscapeAnimation()
+    {
+        isEscaping = true;
+        
+        // Disable collider during escape (can't be shot while fading)
+        if (duckCollider != null)
+        {
+            duckCollider.enabled = false;
+        }
+        
+        // Skip animation if duration is zero (very short flight)
+        if (actualEscapeDuration <= 0f)
+        {
+            transform.localScale = Vector3.one * 0.1f;
+            SetAlpha(0f);
+            isEscaping = false;
+            isMoving = false;
+            SetAnimationState(false);
+            OnEscaped?.Invoke(this);
+            yield break;
+        }
+        
+        float elapsed = 0f;
+        Vector3 startScale = transform.localScale;
+        
+        while (elapsed < actualEscapeDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / actualEscapeDuration;
+            
+            // Ease in curve for smooth fade out
+            float easedT = t * t;
+            
+            // Scale down
+            float scale = Mathf.Lerp(1f, 0.1f, easedT);
+            transform.localScale = Vector3.one * scale;
+            
+            // Fade out
+            SetAlpha(1f - easedT);
+            
+            // Keep moving while escaping (duck flies into the distance while fading)
+            MoveDuck();
+            
+            yield return null;
+        }
+        
+        // Ensure final state
+        transform.localScale = Vector3.one * 0.1f;
+        SetAlpha(0f);
+        
+        isEscaping = false;
         isMoving = false;
         
         // Stop flying animation
@@ -198,8 +431,6 @@ public class DuckController : MonoBehaviour
         
         // Notify listeners that duck escaped (SpawnManager will handle returning to pool)
         OnEscaped?.Invoke(this);
-        
-        // Note: No longer destroying the GameObject - it will be returned to pool by SpawnManager
     }
     
     /// <summary>
@@ -443,6 +674,62 @@ public class DuckController : MonoBehaviour
     }
     
     /// <summary>
+    /// Set the alpha/opacity of all duck renderers
+    /// </summary>
+    /// <param name="alpha">Alpha value from 0 (transparent) to 1 (opaque)</param>
+    private void SetAlpha(float alpha)
+    {
+        if (renderers == null) return;
+        
+        foreach (var r in renderers)
+        {
+            if (r == null) continue;
+            
+            foreach (var mat in r.materials)
+            {
+                if (mat == null) continue;
+                
+                // Set rendering mode to transparent if fading
+                if (alpha < 1f)
+                {
+                    // Enable transparency mode
+                    mat.SetFloat("_Surface", 1); // 0 = Opaque, 1 = Transparent
+                    mat.SetFloat("_Blend", 0); // 0 = Alpha, 1 = Premultiply, 2 = Additive, 3 = Multiply
+                    mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                    mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                    mat.SetInt("_ZWrite", 0);
+                    mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+                    mat.renderQueue = 3000;
+                }
+                else
+                {
+                    // Restore opaque mode
+                    mat.SetFloat("_Surface", 0);
+                    mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+                    mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+                    mat.SetInt("_ZWrite", 1);
+                    mat.DisableKeyword("_SURFACE_TYPE_TRANSPARENT");
+                    mat.renderQueue = -1;
+                }
+                
+                // Set the alpha value
+                if (mat.HasProperty("_BaseColor"))
+                {
+                    Color color = mat.GetColor("_BaseColor");
+                    color.a = alpha;
+                    mat.SetColor("_BaseColor", color);
+                }
+                else if (mat.HasProperty("_Color"))
+                {
+                    Color color = mat.GetColor("_Color");
+                    color.a = alpha;
+                    mat.SetColor("_Color", color);
+                }
+            }
+        }
+    }
+    
+    /// <summary>
     /// Get the current movement status
     /// </summary>
     /// <returns>True if the duck is currently moving</returns>
@@ -474,20 +761,25 @@ public class DuckController : MonoBehaviour
     /// </summary>
     public void ResetForReuse()
     {
-        // Stop any running coroutines (death animation)
+        // Stop any running coroutines (death animation, spawn, escape)
         StopAllCoroutines();
         
         // Reset state flags
         isMoving = false;
         isDestroyed = false;
         isPlayingDeathAnimation = false;
+        isSpawning = false;
+        isEscaping = false;
         
         // Reset properties
         FlightSpeed = 5f;
         TargetPosition = Vector3.zero;
         
-        // Reset transform scale (may have been modified during death animation)
+        // Reset transform scale (may have been modified during animations)
         transform.localScale = Vector3.one;
+        
+        // Reset alpha to fully opaque
+        SetAlpha(1f);
         
         // Enable collider
         if (duckCollider != null)

@@ -20,6 +20,18 @@ public class StartPedestalController : MonoBehaviour
     [Header("Button Settings")]
     [SerializeField] private UnityEvent onButtonPressed;
     
+    [Header("Pedestal Animation")]
+    [SerializeField] private float raisedHeight = -0.05f;
+    [SerializeField] private float loweredHeight = -1.2f;
+    [SerializeField] private float animationDuration = 0.8f;
+    [SerializeField] private AnimationCurve animationCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+    
+    // Animation state
+    private float targetHeight;
+    private float animationStartHeight;
+    private float animationProgress = 1f;
+    private bool isAnimating = false;
+    
     // High score tracking
     private int highScore = 0;
     private const string HIGH_SCORE_KEY = "DuckHunt_HighScore";
@@ -58,6 +70,31 @@ public class StartPedestalController : MonoBehaviour
         // Initialize UI
         UpdateUI(gameManager != null ? gameManager.CurrentState : GameState.Idle);
         UpdateHighScoreDisplay();
+        
+        // Set initial height based on current state
+        targetHeight = raisedHeight;
+    }
+    
+    private void Update()
+    {
+        // Handle pedestal animation
+        if (isAnimating)
+        {
+            animationProgress += Time.deltaTime / animationDuration;
+            
+            if (animationProgress >= 1f)
+            {
+                animationProgress = 1f;
+                isAnimating = false;
+            }
+            
+            float curveValue = animationCurve.Evaluate(animationProgress);
+            float newY = Mathf.Lerp(animationStartHeight, targetHeight, curveValue);
+            
+            Vector3 pos = transform.localPosition;
+            pos.y = newY;
+            transform.localPosition = pos;
+        }
     }
 
     
@@ -113,11 +150,43 @@ public class StartPedestalController : MonoBehaviour
     {
         UpdateUI(newState);
         
+        // Animate pedestal based on game state
+        if (newState == GameState.Playing)
+        {
+            LowerPedestal();
+        }
+        else if (newState == GameState.GameOver || newState == GameState.Idle)
+        {
+            RaisePedestal();
+        }
+        
         // Check for new high score when game ends
         if (newState == GameState.GameOver && scoreManager != null)
         {
             CheckHighScore(scoreManager.CurrentScore);
         }
+    }
+    
+    /// <summary>
+    /// Lowers the pedestal into the ground
+    /// </summary>
+    private void LowerPedestal()
+    {
+        animationStartHeight = transform.localPosition.y;
+        targetHeight = loweredHeight;
+        animationProgress = 0f;
+        isAnimating = true;
+    }
+    
+    /// <summary>
+    /// Raises the pedestal back up
+    /// </summary>
+    private void RaisePedestal()
+    {
+        animationStartHeight = transform.localPosition.y;
+        targetHeight = raisedHeight;
+        animationProgress = 0f;
+        isAnimating = true;
     }
     
     /// <summary>
