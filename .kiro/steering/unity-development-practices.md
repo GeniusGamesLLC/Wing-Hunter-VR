@@ -49,10 +49,11 @@ When working with Unity projects, follow these practices to prevent crashes and 
 - Use batch operations sparingly to avoid overwhelming Unity
 - Monitor Unity process stability during automated operations
 
-### 6.1 Unity MCP Known Issues (localhost:8080 HTTP Server Version)
+### 6.1 Unity MCP Known Issues (WebSocket Version)
 - **`get_components` (plural) is BROKEN** - Do NOT use `action="get_components"` - it will fail
-- **`get_component` (singular) WORKS** - Use `action="get_component"` with `component_name` parameter instead
-- When you need component info, query one component at a time using `get_component`
+- **`get_component` (singular) CRASHES UNITY** - Do NOT use `action="get_component"` - it causes Unity to crash
+- **AVOID querying component details via MCP** - Instead, read the script files directly or use Editor menu scripts to inspect components
+- If you need to know what components are on a GameObject, use `action="find"` which returns `componentNames` in the result
 
 ### 7. Task Execution Strategy
 - **ALWAYS verify Unity connection before starting any Unity task**
@@ -63,23 +64,101 @@ When working with Unity projects, follow these practices to prevent crashes and 
 - Stop and ask for guidance if Unity becomes unresponsive
 - **Never create scripts as workarounds when Unity is disconnected**
 
-### 8. Direct Problem Solving - CRITICAL
-- **ALWAYS fix root causes directly using Unity MCP commands**
-- **NEVER create "fixer" scripts as band-aids for Unity issues**
+### 8. MCP vs Editor Menu Scripts - WHEN TO USE EACH
+
+**Use MCP commands for SMALL changes (1-5 operations):**
+- Creating/modifying a single GameObject
+- Adding/removing one component
+- Changing a few properties
+- Quick scene queries and inspections
+
+**Use Editor Menu Scripts for LARGE/BATCH updates:**
+- Modifying multiple GameObjects at once
+- Bulk material assignments
+- Scene-wide property changes
+- Complex multi-step operations (10+ changes)
+- Operations that would require many sequential MCP calls
+
+**Editor Menu Script Pattern - CORRECT:**
+```csharp
+using UnityEngine;
+using UnityEditor;
+
+// IMPORTANT: Use a STATIC CLASS, NOT a class that extends Editor
+public static class BatchOperationMenu
+{
+    [MenuItem("Tools/My Batch Operation")]
+    public static void RunBatchOperation()
+    {
+        // Perform all operations here
+        // Unity handles undo, compilation, etc.
+        
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+        Debug.Log("Batch operation complete!");
+    }
+}
+```
+
+**COMMON MISTAKES TO AVOID:**
+```csharp
+// WRONG - extending Editor breaks menu items for non-inspector scripts
+public class MySetup : Editor  // DON'T DO THIS
+{
+    [MenuItem("Tools/Setup")]
+    public static void Setup() { }
+}
+
+// WRONG - non-static class requires instance
+public class MySetup  // DON'T DO THIS for menu-only scripts
+{
+    [MenuItem("Tools/Setup")]
+    public static void Setup() { }
+}
+
+// CORRECT - static class with static methods
+public static class MySetup  // DO THIS
+{
+    [MenuItem("Tools/Setup")]
+    public static void Setup() { }
+}
+```
+
+**Static Method Requirements in Static Classes:**
+When using a static class, you must prefix Unity API calls with their class names:
+- `Object.FindObjectOfType<T>()` instead of `FindObjectOfType<T>()`
+- `Object.DestroyImmediate(obj)` instead of `DestroyImmediate(obj)`
+- `Object.Instantiate(prefab)` instead of `Instantiate(prefab)`
+
+**CRITICAL: Always clean up menu scripts after use!**
+- Delete the Editor script once the task is complete
+- These are one-time tools, not permanent project code
+- Leaving them clutters the Tools menu and project
+
+**Why menu scripts are better for large updates:**
+- Single compilation cycle instead of many MCP round-trips
+- Unity handles undo/redo properly
+- More reliable than sequential MCP calls
+- Faster execution for bulk operations
+- Less chance of Unity becoming unresponsive
+
+### 9. Direct Problem Solving - CRITICAL
+- **ALWAYS fix root causes directly** - use MCP for small fixes, Editor scripts for large ones
+- **NEVER create runtime "fixer" scripts** as band-aids for Unity issues
 - **Use Unity MCP to investigate, identify, and fix problems directly**
-- **Scripts that "fix" Unity scene issues often cause more problems**
+- **Scripts that "fix" Unity scene issues at runtime often cause more problems**
 - **Examples of direct fixes:**
-  - Duplicate objects → Delete duplicates with Unity MCP
-  - Wrong materials → Apply correct materials with Unity MCP  
+  - Duplicate objects → Delete duplicates with Unity MCP (few) or Editor script (many)
+  - Wrong materials → Apply correct materials with Unity MCP (few) or Editor script (many)
   - Missing components → Add components with Unity MCP
   - Wrong settings → Modify settings with Unity MCP
-- **Avoid creating scripts that:**
+- **Avoid creating MonoBehaviour scripts that:**
   - "Fix" materials at runtime
-  - "Setup" scene objects automatically
-  - "Correct" Unity configuration issues
+  - "Setup" scene objects automatically on Start/Awake
+  - "Correct" Unity configuration issues during gameplay
   - Work around Unity problems instead of solving them
 
-### 9. Fix Assets at the Source - CRITICAL
+### 10. Fix Assets at the Source - CRITICAL
 - **ALWAYS fix prefabs, models, and assets directly** instead of adding code workarounds
 - **When something is oriented wrong** (rotated, flipped, backwards):
   - Fix the prefab's transform rotation directly
@@ -99,7 +178,7 @@ When working with Unity projects, follow these practices to prevent crashes and 
   - Offset values that compensate for wrong asset orientation
 - **Why this matters:** Workarounds create technical debt, confuse future developers, and often break when assets are updated or reused
 
-### 10. Git Commit Efficiency
+### 11. Git Commit Efficiency
 - **Keep commit responses concise** - Don't repeat the commit message details in the response
 - The commit message already contains all necessary information
 - Simply confirm "Changes committed successfully" or similar brief acknowledgment

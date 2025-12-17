@@ -579,23 +579,23 @@
   - Ensure scoreboard is readable from anywhere in the play area
   - _Requirements: 3.2, 10.3_
 
-- [ ] 40. Position interactive elements in play area
-- [ ] 40.1 Position start pedestal in play area
+- [x] 40. Position interactive elements in play area
+- [x] 40.1 Position start pedestal in play area
   - Place start button pedestal near the front fence (facing the ducks)
   - Player walks up to pedestal and presses start while already facing the duck zone
   - Pedestal should be slightly to the right of center (scoreboard on left)
+  - StartPedestal positioned at (0, -0.05, -20.33)
   - _Requirements: 5.4_
 
-- [ ] 40.2 Position gun display rack in play area
+- [x] 40.2 Position gun display rack in play area
   - Place gun rack along the left side of play area (near left fence)
   - Guns should be easily visible and accessible
   - Rack faces inward toward center of play area
+  - GunDisplayRack positioned at (-2.5, 0.8, -23)
   - _Requirements: 8.5_
 
-- [ ] 40.3 Configure teleport restrictions (if teleport enabled)
-  - Set up XR Interaction Toolkit teleport area
-  - Restrict teleportation to within the fenced play area
-  - Ensure player cannot teleport beyond any fence
+- [x] 40.3 Configure teleport restrictions (if teleport enabled)
+  - N/A - Teleport is not enabled in this project
   - _Requirements: 10.5_
 
 - [x] 31. Create game start pedestal/table
@@ -623,19 +623,23 @@
     - `Dropdown.prefab`, `MinMaxSlider.prefab`, `Text Toggle.prefab`
   - _Requirements: 5.2, 5.3_
 
-- [ ] 32. Create gun display rack
-- [ ] 32.1 Design and create gun display table/rack
-  - Create a display table or wall rack to showcase all available guns
-  - Position guns on the rack with proper spacing
-  - Each gun slot should show the gun model
-  - Add name labels under each gun
+- [x] 32. Create gun display rack
+- [x] 32.1 Design and create gun display table/rack
+  - Create a display table or wall rack with fixed number of display slots (3-5 guns visible at once)
+  - Read gun list dynamically from `GunCollection` ScriptableObject (data-driven, not hardcoded)
+  - Each slot shows: gun model (scaled preview), name label below
+  - Add left/right navigation arrows if more guns than slots (pagination)
+  - Show page indicator (e.g., "2/4" or dots) when multiple pages exist
+  - Position rack along left side of play area, facing inward
   - _Requirements: 8.5_
 
-- [ ] 32.2 Implement gun selection from display rack
+- [x] 32.2 Implement gun browsing and selection
+  - Player can point at navigation arrows and press trigger to browse pages
   - Player can point at a gun and press trigger to select it
-  - Selected gun highlights or has visual feedback
+  - Selected gun highlights with visual feedback (glow, outline, or scale pulse)
   - Gun appears in player's hand when selected
-  - Current selection is visually indicated on the rack
+  - Current selection is visually indicated on the rack (even when on different page)
+  - Rack state persists across game sessions (remembers last viewed page)
   - _Requirements: 8.1, 8.2_
 
 ## Known Bugs and Issues
