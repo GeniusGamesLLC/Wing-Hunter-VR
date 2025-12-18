@@ -2,7 +2,8 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
-/// Manages the spawning of ducks with coroutine-based timing and difficulty scaling
+/// Manages the spawning of ducks with coroutine-based timing and difficulty scaling.
+/// Supports both legacy straight-line movement and multi-point spline pathing.
 /// </summary>
 public class SpawnManager : MonoBehaviour
 {
@@ -26,6 +27,13 @@ public class SpawnManager : MonoBehaviour
     
     [Tooltip("Array of target point transforms (auto-populated from parent)")]
     [SerializeField] private Transform[] TargetPoints;
+    
+    [Header("Flight Path Generation")]
+    [Tooltip("Flight path generator for multi-point spline paths (optional - falls back to straight-line if not assigned)")]
+    [SerializeField] private FlightPathGenerator flightPathGenerator;
+    
+    [Tooltip("Whether to use multi-point spline paths (requires FlightPathGenerator)")]
+    [SerializeField] private bool useSplinePaths = true;
     
     [Header("Current Settings")]
     [Tooltip("Current spawn interval in seconds")]
@@ -66,12 +74,39 @@ public class SpawnManager : MonoBehaviour
             Debug.Log("SpawnManager: PerformanceManager found - dynamic spawn optimization enabled");
         }
         
+        // Auto-discover FlightPathGenerator if not assigned
+        AutoDiscoverFlightPathGenerator();
+        
         // Auto-discover spawn and target points from parent objects
         AutoDiscoverSpawnPoints();
         AutoDiscoverTargetPoints();
         
         // Validate spawn points
         ValidateSpawnConfiguration();
+    }
+    
+    /// <summary>
+    /// Auto-discovers FlightPathGenerator in the scene if not assigned
+    /// </summary>
+    private void AutoDiscoverFlightPathGenerator()
+    {
+        if (flightPathGenerator == null)
+        {
+            flightPathGenerator = FindObjectOfType<FlightPathGenerator>();
+            if (flightPathGenerator != null)
+            {
+                Debug.Log("SpawnManager: Auto-discovered FlightPathGenerator - multi-point pathing enabled");
+            }
+            else if (useSplinePaths)
+            {
+                Debug.LogWarning("SpawnManager: FlightPathGenerator not found. Falling back to straight-line paths.");
+                useSplinePaths = false;
+            }
+        }
+        else
+        {
+            Debug.Log("SpawnManager: FlightPathGenerator assigned - multi-point pathing enabled");
+        }
     }
     
     /// <summary>
@@ -226,7 +261,9 @@ public class SpawnManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Spawns a single duck with randomized start and end positions
+    /// Spawns a single duck with randomized start and end positions.
+    /// Uses FlightPathGenerator for multi-point spline paths when available,
+    /// otherwise falls back to straight-line movement.
     /// </summary>
     private void SpawnDuck()
     {
@@ -248,8 +285,33 @@ public class SpawnManager : MonoBehaviour
             // Position the duck at spawn location
             duckController.transform.position = spawnPosition;
             
-            // Initialize the duck with movement parameters
-            duckController.Initialize(spawnPosition, targetPosition, currentDuckSpeed);
+            // Initialize the duck - use spline path if available, otherwise straight line
+            if (useSplinePaths && flightPathGenerator != null)
+            {
+                // Generate a flight path using current difficulty
+                FlightPath flightPath = flightPathGenerator.GeneratePath(
+                    spawnPosition, 
+                    targetPosition, 
+                    currentDifficultyLevel
+                );
+                
+                if (flightPath != null)
+                {
+                    // Initialize with spline-based movement
+                    duckController.Initialize(flightPath, currentDuckSpeed);
+                }
+                else
+                {
+                    // Fallback to straight-line if path generation failed
+                    Debug.LogWarning("SpawnManager: FlightPath generation returned null, using straight-line path");
+                    duckController.Initialize(spawnPosition, targetPosition, currentDuckSpeed);
+                }
+            }
+            else
+            {
+                // Use legacy straight-line movement
+                duckController.Initialize(spawnPosition, targetPosition, currentDuckSpeed);
+            }
             
             // Subscribe to duck events for cleanup and scoring
             duckController.OnDestroyed += OnDuckDestroyed;
@@ -464,5 +526,54 @@ public class SpawnManager : MonoBehaviour
     public void ResetActiveDuckCount()
     {
         activeDuckCount = 0;
+    }
+    
+    /// <summary>
+    /// Gets whether spline paths are currently enabled
+    /// </summary>
+    /// <returns>True if using multi-point spline paths</returns>
+    public bool IsUsingSplinePaths()
+    {
+        return useSplinePaths && flightPathGenerator != null;
+    }
+    
+    /// <summary>
+    /// Sets whether to use spline paths for duck movement.
+    /// Requires FlightPathGenerator to be available.
+    /// </summary>
+    /// <param name="enabled">True to enable spline paths, false for straight-line movement</param>
+    public void SetUseSplinePaths(bool enabled)
+    {
+        if (enabled && flightPathGenerator == null)
+        {
+            Debug.LogWarning("SpawnManager: Cannot enable spline paths - FlightPathGenerator not found");
+            useSplinePaths = false;
+            return;
+        }
+        
+        useSplinePaths = enabled;
+        Debug.Log($"SpawnManager: Spline paths {(enabled ? "enabled" : "disabled")}");
+    }
+    
+    /// <summary>
+    /// Gets the FlightPathGenerator reference
+    /// </summary>
+    /// <returns>The FlightPathGenerator component, or null if not available</returns>
+    public FlightPathGenerator GetFlightPathGenerator()
+    {
+        return flightPathGenerator;
+    }
+    
+    /// <summary>
+    /// Sets the FlightPathGenerator reference
+    /// </summary>
+    /// <param name="generator">The FlightPathGenerator to use</param>
+    public void SetFlightPathGenerator(FlightPathGenerator generator)
+    {
+        flightPathGenerator = generator;
+        if (generator != null && useSplinePaths)
+        {
+            Debug.Log("SpawnManager: FlightPathGenerator assigned - multi-point pathing enabled");
+        }
     }
 }

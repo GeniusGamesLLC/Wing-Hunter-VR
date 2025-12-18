@@ -49,7 +49,59 @@ When working with Unity projects, follow these practices to prevent crashes and 
 - Use batch operations sparingly to avoid overwhelming Unity
 - Monitor Unity process stability during automated operations
 
-### 6.1 Unity MCP Known Issues (WebSocket Version)
+### 6.1 Script Compilation Wait Times - CRITICAL
+**Unity recompilation takes 5-15+ seconds. You MUST wait for it to complete before making more changes.**
+
+**After creating or modifying ANY C# script:**
+1. **STOP and WAIT** - Do NOT immediately make another MCP call or file write
+2. **Check compilation status** - Use `mcp_unityMCP_read_console` to verify no errors
+3. **Verify Unity is responsive** - Use `mcp_unityMCP_manage_editor` with `action="telemetry_status"`
+4. **Only then proceed** - After confirming Unity has finished compiling
+
+**Signs Unity is still compiling:**
+- Console shows "Compiling..." or script reload messages
+- Unity editor shows spinning wheel
+- MCP calls return errors or timeouts
+- `telemetry_status` fails or returns slowly
+
+**Workflow after script changes:**
+```
+1. Write/modify script via fsWrite or strReplace
+2. WAIT - Unity detects change and starts compiling (5-15 seconds)
+3. Check console for compilation errors
+4. Verify telemetry_status returns successfully
+5. ONLY THEN make next change or MCP call
+```
+
+**NEVER do this:**
+- Create multiple scripts in rapid succession
+- Modify a script then immediately call MCP to use it
+- Write script A, then immediately write script B
+- Assume compilation is instant
+
+**If you see compilation errors:**
+- STOP all operations
+- Fix the error in the script
+- Wait for recompilation
+- Verify console is clear before continuing
+
+### 6.2 Asset Import and Meta Files - AVOID LOOPS
+- **After creating new assets (prefabs, materials, scripts) via fsWrite:**
+  - Unity may not immediately generate `.meta` files or recognize the asset
+  - **DO NOT loop checking for meta files** - this wastes credits and time
+  - **Check ONCE**, then if the asset shows as "Unknown" or has no meta file:
+    - Trigger asset refresh via MCP: `mcp_unityMCP_execute_menu_item` with `menu_path="Assets/Refresh"`
+    - **WAIT after refresh** - Unity needs time to process. Do NOT immediately check again.
+    - After triggering refresh, wait a moment then verify the asset is recognized
+  - The asset will be properly imported after refresh completes
+- **Signs that Unity needs a refresh:**
+  - `assetType: "Unknown"` in get_info response
+  - Missing `.meta` file after creating an asset
+  - GUID is empty in asset info
+- **NEVER poll/loop waiting for Unity to auto-import** - trigger refresh once and wait
+- **Unity is slower than MCP calls** - always give Unity time to process after refresh commands
+
+### 6.3 Unity MCP Known Issues (WebSocket Version)
 - **`get_components` (plural) is BROKEN** - Do NOT use `action="get_components"` - it will fail
 - **`get_component` (singular) CRASHES UNITY** - Do NOT use `action="get_component"` - it causes Unity to crash
 - **AVOID querying component details via MCP** - Instead, read the script files directly or use Editor menu scripts to inspect components

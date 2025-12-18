@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using DuckHunt.Data;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -38,6 +39,12 @@ public class DuckController : MonoBehaviour
     [Tooltip("Max percentage of flight time that can be used for spawn+escape animations")]
     [SerializeField] private float maxAnimationTimePercent = 0.4f;
     
+    [Header("Path Visualization")]
+    [Tooltip("LineRenderer for visualizing the flight path (optional, will be created if needed)")]
+    [SerializeField] private LineRenderer pathLineRenderer;
+    [Tooltip("Number of points to use for path visualization")]
+    [SerializeField] private int pathVisualizationPoints = 50;
+    
     // Calculated animation durations for current flight
     private float actualSpawnDuration;
     private float actualEscapeDuration;
@@ -56,12 +63,37 @@ public class DuckController : MonoBehaviour
     private Material[] originalMaterials;
     private Material[] fadeMaterials;
     
+    // Spline movement fields
+    private FlightPath currentPath;
+    private float distanceTraveled;
+    private bool useSplineMovement = false;
+    
+    /// <summary>
+    /// The current flight path (null if using legacy straight-line movement)
+    /// </summary>
+    public FlightPath CurrentPath => currentPath;
+    
     private void Awake()
     {
         animator = GetComponent<Animator>();
         duckCollider = GetComponent<CapsuleCollider>();
         renderers = GetComponentsInChildren<Renderer>();
         CacheMaterials();
+        
+        // Subscribe to debug settings changes
+        if (DebugSettings.Instance != null)
+        {
+            DebugSettings.Instance.OnSettingsChanged += OnDebugSettingsChanged;
+        }
+    }
+    
+    private void OnDestroy()
+    {
+        // Unsubscribe from debug settings
+        if (DebugSettings.Instance != null)
+        {
+            DebugSettings.Instance.OnSettingsChanged -= OnDebugSettingsChanged;
+        }
     }
     
     /// <summary>
@@ -108,7 +140,14 @@ public class DuckController : MonoBehaviour
     {
         if (isMoving && !isDestroyed && !isPlayingDeathAnimation && !isSpawning && !isEscaping)
         {
-            MoveDuck();
+            if (useSplineMovement && currentPath != null)
+            {
+                UpdateSplineMovement();
+            }
+            else
+            {
+                MoveDuck();
+            }
             CheckIfReachedTarget();
         }
     }
@@ -153,6 +192,111 @@ public class DuckController : MonoBehaviour
         
         // Start spawn animation (will enable movement and collider when done)
         StartCoroutine(PlaySpawnAnimation());
+    }
+    
+    /// <summary>
+    /// Initialize the duck with a FlightPath for spline-based movement.
+    /// Uses arc-length parameterization for constant-speed movement along curved paths.
+    /// </summary>
+    /// <param name="path">The flight path to follow</param>
+    /// <param name="speed">Flight speed in units per second</param>
+    public void Initialize(FlightPath path, float speed)
+    {
+        if (path == null)
+        {
+            Debug.LogError("[DuckController] Initialize called with null FlightPath, falling back to straight line");
+            // Fall back to straight line if path is null
+            Initialize(Vector3.zero, Vector3.forward * 10f, speed);
+            return;
+        }
+        
+        currentPath = path;
+        useSplineMovement = true;
+        distanceTraveled = 0f;
+        
+        startPosition = path.SpawnPoint;
+        TargetPosition = path.TargetPoint;
+        FlightSpeed = speed;
+        
+        // Set initial position
+        transform.position = startPosition;
+        
+        // Look towards initial movement direction (tangent at start)
+        Vector3 initialTangent = path.GetTangentAtDistance(0f);
+        if (initialTangent != Vector3.zero)
+        {
+            transform.rotation = Quaternion.LookRotation(initialTangent);
+        }
+        
+        // Reset state
+        isDestroyed = false;
+        isEscaping = false;
+        
+        // Calculate animation durations based on flight time
+        CalculateAnimationDurationsForPath();
+        
+        // Disable collider during spawn animation
+        if (duckCollider != null)
+        {
+            duckCollider.enabled = false;
+        }
+        
+        // Start flying animation
+        SetAnimationState(true);
+        
+        // Setup path visualization
+        SetupPathVisualization();
+        
+        // Start spawn animation (will enable movement and collider when done)
+        StartCoroutine(PlaySpawnAnimation());
+        
+        Debug.Log($"[DuckController] Initialized with FlightPath: {path}, Speed: {speed}");
+    }
+    
+    /// <summary>
+    /// Calculate animation durations for spline-based flight paths.
+    /// Uses the total arc length of the path for accurate timing.
+    /// </summary>
+    private void CalculateAnimationDurationsForPath()
+    {
+        if (currentPath == null)
+        {
+            CalculateAnimationDurations();
+            return;
+        }
+        
+        // Use actual arc length for accurate flight time estimation
+        float estimatedFlightTime = currentPath.GetEstimatedDuration(FlightSpeed);
+        
+        // Calculate max time available for animations
+        float maxAnimationTime = estimatedFlightTime * maxAnimationTimePercent;
+        
+        // Ensure we have minimum fully visible time
+        float availableAnimationTime = Mathf.Max(0f, estimatedFlightTime - minFullyVisibleTime);
+        
+        // Use the smaller of the two constraints
+        float totalAnimationBudget = Mathf.Min(maxAnimationTime, availableAnimationTime);
+        
+        // Split budget between spawn and escape (spawn gets slightly more)
+        float spawnRatio = 0.55f;
+        float escapeRatio = 0.45f;
+        
+        // Calculate actual durations, capped by max values
+        actualSpawnDuration = Mathf.Min(maxSpawnDuration, totalAnimationBudget * spawnRatio);
+        actualEscapeDuration = Mathf.Min(maxEscapeDuration, totalAnimationBudget * escapeRatio);
+        
+        // Ensure minimum animation time if we have any budget
+        float minAnimDuration = 0.1f;
+        if (totalAnimationBudget > minAnimDuration * 2)
+        {
+            actualSpawnDuration = Mathf.Max(minAnimDuration, actualSpawnDuration);
+            actualEscapeDuration = Mathf.Max(minAnimDuration, actualEscapeDuration);
+        }
+        else if (totalAnimationBudget <= 0)
+        {
+            actualSpawnDuration = 0f;
+            actualEscapeDuration = 0f;
+        }
     }
     
     /// <summary>
@@ -240,7 +384,14 @@ public class DuckController : MonoBehaviour
             SetAlpha(easedT);
             
             // Move while spawning (so it doesn't just sit there)
-            MoveDuck();
+            if (useSplineMovement && currentPath != null)
+            {
+                MoveSplineDuringAnimation();
+            }
+            else
+            {
+                MoveDuck();
+            }
             
             yield return null;
         }
@@ -260,7 +411,7 @@ public class DuckController : MonoBehaviour
     }
     
     /// <summary>
-    /// Move the duck towards its target position
+    /// Move the duck towards its target position (legacy straight-line movement)
     /// </summary>
     private void MoveDuck()
     {
@@ -268,25 +419,94 @@ public class DuckController : MonoBehaviour
     }
     
     /// <summary>
+    /// Update duck position along the spline path using arc-length parameterization.
+    /// Maintains constant speed regardless of path curvature.
+    /// </summary>
+    private void UpdateSplineMovement()
+    {
+        if (currentPath == null) return;
+        
+        // Update distance traveled
+        distanceTraveled += FlightSpeed * Time.deltaTime;
+        
+        // Get position and tangent at current distance
+        Vector3 newPosition = currentPath.GetPositionAtDistance(distanceTraveled);
+        Vector3 tangent = currentPath.GetTangentAtDistance(distanceTraveled);
+        
+        // Update position
+        transform.position = newPosition;
+        
+        // Update orientation to face movement direction (smooth rotation)
+        if (tangent != Vector3.zero)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(tangent);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 10f);
+        }
+    }
+    
+    /// <summary>
+    /// Move the duck along the spline during spawn animation.
+    /// </summary>
+    private void MoveSplineDuringAnimation()
+    {
+        if (currentPath == null || !useSplineMovement) return;
+        
+        distanceTraveled += FlightSpeed * Time.deltaTime;
+        
+        Vector3 newPosition = currentPath.GetPositionAtDistance(distanceTraveled);
+        Vector3 tangent = currentPath.GetTangentAtDistance(distanceTraveled);
+        
+        transform.position = newPosition;
+        
+        if (tangent != Vector3.zero)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(tangent);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 10f);
+        }
+    }
+    
+    /// <summary>
     /// Check if the duck should start escaping (approaching target) or has reached target
     /// </summary>
     private void CheckIfReachedTarget()
     {
-        float distanceToTarget = Vector3.Distance(transform.position, TargetPosition);
-        
-        // Calculate distance at which to start escape animation
-        // Duck should start fading when it's (escape duration * speed) away from target
-        float escapeStartDistance = actualEscapeDuration * FlightSpeed;
-        
-        // Start escape animation when approaching target (so it fades while moving)
-        if (distanceToTarget <= escapeStartDistance && !isEscaping)
+        if (useSplineMovement && currentPath != null)
         {
-            TriggerEscape();
+            // For spline movement, check distance traveled vs total arc length
+            float remainingDistance = currentPath.TotalArcLength - distanceTraveled;
+            
+            // Calculate distance at which to start escape animation
+            float escapeStartDistance = actualEscapeDuration * FlightSpeed;
+            
+            // Start escape animation when approaching end of path
+            if (remainingDistance <= escapeStartDistance && !isEscaping)
+            {
+                TriggerEscape();
+            }
+            // Fallback: if past the end and somehow not escaping yet
+            else if (currentPath.IsAtEnd(distanceTraveled) && !isEscaping)
+            {
+                TriggerEscape();
+            }
         }
-        // Fallback: if very close and somehow not escaping yet
-        else if (distanceToTarget < 0.1f && !isEscaping)
+        else
         {
-            TriggerEscape();
+            // Legacy straight-line check
+            float distanceToTarget = Vector3.Distance(transform.position, TargetPosition);
+            
+            // Calculate distance at which to start escape animation
+            float escapeStartDistance = actualEscapeDuration * FlightSpeed;
+            
+            // Start escape animation when approaching target (so it fades while moving)
+            if (distanceToTarget <= escapeStartDistance && !isEscaping)
+            {
+                TriggerEscape();
+            }
+            // Fallback: if very close and somehow not escaping yet
+            else if (distanceToTarget < 0.1f && !isEscaping)
+            {
+                TriggerEscape();
+            }
         }
     }
     
@@ -308,6 +528,9 @@ public class DuckController : MonoBehaviour
         
         // Stop flying animation
         SetAnimationState(false);
+        
+        // Hide path visualization
+        HidePathVisualization();
         
         // IMPORTANT: Capture position BEFORE any state changes for particle effects
         Vector3 hitPosition = transform.position;
@@ -414,7 +637,14 @@ public class DuckController : MonoBehaviour
             SetAlpha(1f - easedT);
             
             // Keep moving while escaping (duck flies into the distance while fading)
-            MoveDuck();
+            if (useSplineMovement && currentPath != null)
+            {
+                MoveSplineDuringAnimation();
+            }
+            else
+            {
+                MoveDuck();
+            }
             
             yield return null;
         }
@@ -428,6 +658,9 @@ public class DuckController : MonoBehaviour
         
         // Stop flying animation
         SetAnimationState(false);
+        
+        // Hide path visualization when escaping
+        HidePathVisualization();
         
         // Notify listeners that duck escaped (SpawnManager will handle returning to pool)
         OnEscaped?.Invoke(this);
@@ -756,6 +989,162 @@ public class DuckController : MonoBehaviour
         return Vector3.Distance(transform.position, TargetPosition);
     }
     
+    #region Path Visualization
+    
+    /// <summary>
+    /// Sets up the path visualization LineRenderer if debug settings allow.
+    /// </summary>
+    private void SetupPathVisualization()
+    {
+        if (currentPath == null || !useSplineMovement) return;
+        
+        // Check if visualization should be shown
+        bool showPath = DebugSettings.Instance != null && DebugSettings.Instance.ShowSplinePaths;
+        
+        if (!showPath)
+        {
+            HidePathVisualization();
+            return;
+        }
+        
+        // Create LineRenderer if needed
+        if (pathLineRenderer == null)
+        {
+            pathLineRenderer = gameObject.AddComponent<LineRenderer>();
+        }
+        
+        // Configure LineRenderer
+        ConfigurePathLineRenderer();
+        
+        // Generate and set path points
+        UpdatePathVisualization();
+    }
+    
+    /// <summary>
+    /// Configures the LineRenderer with appropriate settings for path visualization.
+    /// </summary>
+    private void ConfigurePathLineRenderer()
+    {
+        if (pathLineRenderer == null) return;
+        
+        // Get visualization settings from FlightPathConfig if available
+        Color pathColor = Color.cyan;
+        float pathWidth = 0.05f;
+        
+        // Try to find FlightPathConfig for settings
+        FlightPathConfig config = Resources.Load<FlightPathConfig>("FlightPathConfig");
+        if (config == null)
+        {
+            // Try to find FlightPathGenerator in scene and get its config
+            FlightPathGenerator generator = FindObjectOfType<FlightPathGenerator>();
+            if (generator != null)
+            {
+                config = generator.Config;
+            }
+        }
+        
+        if (config != null)
+        {
+            pathColor = config.SplinePathColor;
+            pathWidth = config.SplinePathWidth;
+        }
+        
+        pathLineRenderer.startWidth = pathWidth;
+        pathLineRenderer.endWidth = pathWidth;
+        pathLineRenderer.startColor = pathColor;
+        pathLineRenderer.endColor = pathColor;
+        pathLineRenderer.useWorldSpace = true;
+        pathLineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        pathLineRenderer.receiveShadows = false;
+        
+        // Create or get a simple unlit material
+        Material lineMaterial = GetPathVisualizationMaterial(pathColor);
+        if (lineMaterial != null)
+        {
+            pathLineRenderer.material = lineMaterial;
+        }
+    }
+    
+    /// <summary>
+    /// Gets or creates a material for path visualization.
+    /// </summary>
+    private Material GetPathVisualizationMaterial(Color color)
+    {
+        // Try to find URP unlit shader
+        Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
+        if (shader == null)
+        {
+            shader = Shader.Find("Unlit/Color");
+        }
+        if (shader == null)
+        {
+            shader = Shader.Find("Sprites/Default");
+        }
+        
+        if (shader != null)
+        {
+            Material mat = new Material(shader);
+            mat.color = color;
+            if (mat.HasProperty("_BaseColor"))
+            {
+                mat.SetColor("_BaseColor", color);
+            }
+            return mat;
+        }
+        
+        return null;
+    }
+    
+    /// <summary>
+    /// Updates the path visualization with current path points.
+    /// </summary>
+    private void UpdatePathVisualization()
+    {
+        if (pathLineRenderer == null || currentPath == null) return;
+        
+        // Generate visualization points
+        Vector3[] points = currentPath.GenerateVisualizationPoints(pathVisualizationPoints);
+        
+        if (points != null && points.Length > 0)
+        {
+            pathLineRenderer.positionCount = points.Length;
+            pathLineRenderer.SetPositions(points);
+            pathLineRenderer.enabled = true;
+        }
+    }
+    
+    /// <summary>
+    /// Hides the path visualization.
+    /// </summary>
+    private void HidePathVisualization()
+    {
+        if (pathLineRenderer != null)
+        {
+            pathLineRenderer.enabled = false;
+        }
+    }
+    
+    /// <summary>
+    /// Called when debug settings change. Updates visualization state.
+    /// </summary>
+    private void OnDebugSettingsChanged()
+    {
+        if (DebugSettings.Instance == null) return;
+        
+        bool showPath = DebugSettings.Instance.ShowSplinePaths;
+        
+        if (showPath && currentPath != null && useSplineMovement && !isDestroyed)
+        {
+            SetupPathVisualization();
+        }
+        else
+        {
+            HidePathVisualization();
+        }
+    }
+    
+    #endregion
+    
     /// <summary>
     /// Reset the duck to a clean state for reuse from object pool
     /// </summary>
@@ -770,6 +1159,14 @@ public class DuckController : MonoBehaviour
         isPlayingDeathAnimation = false;
         isSpawning = false;
         isEscaping = false;
+        
+        // Reset spline movement state
+        currentPath = null;
+        distanceTraveled = 0f;
+        useSplineMovement = false;
+        
+        // Hide path visualization
+        HidePathVisualization();
         
         // Reset properties
         FlightSpeed = 5f;
@@ -793,5 +1190,51 @@ public class DuckController : MonoBehaviour
         // Clear events (will be reassigned by SpawnManager)
         OnDestroyed = null;
         OnEscaped = null;
+    }
+    
+    /// <summary>
+    /// Gets the distance remaining to the end of the path.
+    /// Works for both spline and straight-line movement.
+    /// </summary>
+    /// <returns>Distance remaining in world units</returns>
+    public float GetDistanceRemaining()
+    {
+        if (useSplineMovement && currentPath != null)
+        {
+            return Mathf.Max(0f, currentPath.TotalArcLength - distanceTraveled);
+        }
+        return Vector3.Distance(transform.position, TargetPosition);
+    }
+    
+    /// <summary>
+    /// Gets the total path length.
+    /// Works for both spline and straight-line movement.
+    /// </summary>
+    /// <returns>Total path length in world units</returns>
+    public float GetTotalPathLength()
+    {
+        if (useSplineMovement && currentPath != null)
+        {
+            return currentPath.TotalArcLength;
+        }
+        return Vector3.Distance(startPosition, TargetPosition);
+    }
+    
+    /// <summary>
+    /// Gets the normalized progress along the path (0 to 1).
+    /// </summary>
+    /// <returns>Progress value from 0 (start) to 1 (end)</returns>
+    public float GetPathProgress()
+    {
+        float totalLength = GetTotalPathLength();
+        if (totalLength <= 0f) return 1f;
+        
+        if (useSplineMovement && currentPath != null)
+        {
+            return Mathf.Clamp01(distanceTraveled / totalLength);
+        }
+        
+        float traveled = Vector3.Distance(startPosition, transform.position);
+        return Mathf.Clamp01(traveled / totalLength);
     }
 }

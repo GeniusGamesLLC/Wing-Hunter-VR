@@ -7,6 +7,7 @@ public class GunSelectionManager : MonoBehaviour
     [SerializeField] private GunCollection gunCollection;
     [SerializeField] private Transform gunAttachPoint;
     [SerializeField] private GameObject controllerVisual; // The controller model to hide when gun is equipped
+    [SerializeField] private GameObject controllerLineVisual; // The ray line visual to hide when gun is equipped
     
     [Header("Current Gun State")]
     [SerializeField] private int currentGunIndex = 0;
@@ -117,6 +118,17 @@ public class GunSelectionManager : MonoBehaviour
             {
                 // Try to find and hide controller visual automatically
                 HideControllerVisual();
+            }
+            
+            // Hide controller line visual (ray) when gun is equipped
+            if (controllerLineVisual != null)
+            {
+                controllerLineVisual.SetActive(false);
+            }
+            else
+            {
+                // Try to find and hide line visual automatically
+                HideControllerLineVisual();
             }
         }
         
@@ -348,6 +360,80 @@ public class GunSelectionManager : MonoBehaviour
                         sibling.gameObject.SetActive(false);
                         Debug.Log($"GunSelectionManager: Hidden controller visual: {sibling.name}");
                         return;
+                    }
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Hide the controller line visual (ray) when a gun is equipped
+    /// </summary>
+    private void HideControllerLineVisual()
+    {
+        if (gunAttachPoint == null) return;
+        
+        // Look for line visual in the controller hierarchy
+        // Common names: LineVisual, Line Visual, RayVisual, Ray Visual
+        string[] lineVisualNames = { "LineVisual", "Line Visual", "RayVisual", "Ray Visual" };
+        string[] interactorNames = { "Near-Far Interactor", "NearFar Interactor", "Ray Interactor", "XRRayInteractor" };
+        
+        Transform parent = gunAttachPoint.parent;
+        while (parent != null)
+        {
+            // First try to find interactor, then look for line visual inside it
+            foreach (string interactorName in interactorNames)
+            {
+                Transform interactor = parent.Find(interactorName);
+                if (interactor != null)
+                {
+                    foreach (string lineName in lineVisualNames)
+                    {
+                        Transform lineVisual = interactor.Find(lineName);
+                        if (lineVisual != null)
+                        {
+                            lineVisual.gameObject.SetActive(false);
+                            Debug.Log($"GunSelectionManager: Hidden controller line visual: {lineVisual.name}");
+                            return;
+                        }
+                    }
+                }
+            }
+            
+            // Also check direct children for line visual
+            foreach (string lineName in lineVisualNames)
+            {
+                Transform lineVisual = parent.Find(lineName);
+                if (lineVisual != null)
+                {
+                    lineVisual.gameObject.SetActive(false);
+                    Debug.Log($"GunSelectionManager: Hidden controller line visual: {lineVisual.name}");
+                    return;
+                }
+            }
+            
+            parent = parent.parent;
+        }
+        
+        // Check siblings of the attach point for interactors with line visuals
+        if (gunAttachPoint.parent != null)
+        {
+            foreach (Transform sibling in gunAttachPoint.parent)
+            {
+                foreach (string interactorName in interactorNames)
+                {
+                    if (sibling.name.Contains(interactorName) || sibling.name.Contains("Interactor"))
+                    {
+                        foreach (string lineName in lineVisualNames)
+                        {
+                            Transform lineVisual = sibling.Find(lineName);
+                            if (lineVisual != null)
+                            {
+                                lineVisual.gameObject.SetActive(false);
+                                Debug.Log($"GunSelectionManager: Hidden controller line visual: {lineVisual.name}");
+                                return;
+                            }
+                        }
                     }
                 }
             }

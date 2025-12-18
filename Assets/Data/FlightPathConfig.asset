@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae3559eea3cb84cf48f9d4ee822575c3, type: 3}
+  m_Name: FlightPathConfig
+  m_EditorClassIdentifier: Assembly-CSharp::FlightPathConfig
+  SplineTension: 0.5
+  ArcLengthSamples: 20
+  MinFlightDuration: 3
+  FlightZone:
+    m_Center: {x: 0, y: 0, z: 0}
+    m_Extent: {x: 10, y: 4, z: 10}
+  MinHeightAboveGround: 1.5
+  MaxHeightAboveGround: 6
+  LateralDeviationRange: 3
+  VerticalDeviationRange: 1.5
+  MinDistanceFromEndpoints: 2
+  PreferPreplacedWaypoints: 1
+  WaypointsByDifficulty:
+  - DifficultyLevel: 1
+    MinWaypoints: 1
+    MaxWaypoints: 2
+    ChanceOfMaxWaypoints: 0.7
+  - DifficultyLevel: 2
+    MinWaypoints: 1
+    MaxWaypoints: 2
+    ChanceOfMaxWaypoints: 0.5
+  - DifficultyLevel: 3
+    MinWaypoints: 1
+    MaxWaypoints: 3
+    ChanceOfMaxWaypoints: 0.5
+  - DifficultyLevel: 4
+    MinWaypoints: 0
+    MaxWaypoints: 3
+    ChanceOfMaxWaypoints: 0.5
+  - DifficultyLevel: 5
+    MinWaypoints: 0
+    MaxWaypoints: 3
+    ChanceOfMaxWaypoints: 0.3
+  SplinePathColor: {r: 0, g: 1, b: 1, a: 1}
+  IntermediateWaypointColor: {r: 1, g: 0.6, b: 0, a: 1}
+  SplinePathWidth: 0.05
+  WaypointIndicatorScale: 0.25
+  SplineVisualizationSamples: 50

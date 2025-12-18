@@ -18,11 +18,8 @@ public class SpawnPointManager : MonoBehaviour
     private SpawnPointMarker[] targetPoints;
     
     [Header("Visibility Settings")]
-    [Tooltip("Whether indicators are currently visible")]
+    [Tooltip("Whether indicators are currently visible (read from DebugSettings)")]
     [SerializeField] private bool showIndicators = true;
-    
-    [Tooltip("Debug mode - shows indicators even during play mode")]
-    [SerializeField] private bool debugShowIndicators = false;
     
     [Header("Parent References")]
     [Tooltip("Parent transform for spawn points (auto-discovered if null)")]
@@ -51,7 +48,8 @@ public class SpawnPointManager : MonoBehaviour
     public SpawnPointMarker[] TargetPoints => targetPoints;
     
     /// <summary>
-    /// Gets or sets whether indicators are visible
+    /// Gets or sets whether indicators are visible.
+    /// Now delegates to centralized DebugSettings.
     /// </summary>
     public bool ShowIndicators
     {
@@ -65,19 +63,15 @@ public class SpawnPointManager : MonoBehaviour
     
     /// <summary>
     /// Gets or sets debug mode - when enabled, shows indicators even during play mode.
-    /// Can be toggled from a settings menu in VR.
+    /// Now delegates to centralized DebugSettings for spawn point indicators.
     /// </summary>
     public bool DebugShowIndicators
     {
-        get => debugShowIndicators;
+        get => DebugSettings.Instance.ShowSpawnPointIndicators;
         set
         {
-            debugShowIndicators = value;
-            if (Application.isPlaying)
-            {
-                SetAllIndicatorsVisible(value);
-                showIndicators = value;
-            }
+            DebugSettings.Instance.ShowSpawnPointIndicators = value;
+            DebugSettings.Instance.ShowTargetPointIndicators = value;
         }
     }
     
@@ -86,18 +80,75 @@ public class SpawnPointManager : MonoBehaviour
         RefreshPointLists();
     }
     
+    private void OnEnable()
+    {
+        // Subscribe to centralized debug settings changes
+        DebugSettings.Instance.OnSettingsChanged += OnDebugSettingsChanged;
+    }
+    
+    private void OnDisable()
+    {
+        // Unsubscribe from debug settings changes
+        if (DebugSettings.Instance != null)
+        {
+            DebugSettings.Instance.OnSettingsChanged -= OnDebugSettingsChanged;
+        }
+    }
+    
+    /// <summary>
+    /// Called when DebugSettings change. Updates indicator visibility.
+    /// </summary>
+    private void OnDebugSettingsChanged()
+    {
+        UpdateIndicatorVisibility();
+    }
+    
+    /// <summary>
+    /// Updates indicator visibility based on centralized DebugSettings
+    /// </summary>
+    private void UpdateIndicatorVisibility()
+    {
+        bool showSpawn = DebugSettings.Instance.ShowSpawnPointIndicators;
+        bool showTarget = DebugSettings.Instance.ShowTargetPointIndicators;
+        
+        // Update spawn point indicators
+        if (spawnPoints != null)
+        {
+            foreach (var point in spawnPoints)
+            {
+                if (point != null)
+                {
+                    point.SetIndicatorVisible(showSpawn);
+                }
+            }
+        }
+        
+        // Update target point indicators
+        if (targetPoints != null)
+        {
+            foreach (var point in targetPoints)
+            {
+                if (point != null)
+                {
+                    point.SetIndicatorVisible(showTarget);
+                }
+            }
+        }
+        
+        showIndicators = showSpawn || showTarget;
+    }
+    
     private void Start()
     {
         // Apply visibility settings from config or defaults
         if (Application.isPlaying)
         {
-            bool shouldShow = false;
-            
-            // Check config settings if available
+            // Initialize DebugSettings from config if available
             if (config != null)
             {
-                shouldShow = config.ShowIndicatorsInPlayMode || config.DebugShowIndicators;
-                debugShowIndicators = config.DebugShowIndicators;
+                bool shouldShow = config.ShowIndicatorsInPlayMode || config.DebugShowIndicators;
+                DebugSettings.Instance.ShowSpawnPointIndicators = shouldShow;
+                DebugSettings.Instance.ShowTargetPointIndicators = shouldShow;
                 
                 // Spawn occluders if configured
                 if (config.DefaultOccluderPrefab != null)
@@ -106,8 +157,8 @@ public class SpawnPointManager : MonoBehaviour
                 }
             }
             
-            SetAllIndicatorsVisible(shouldShow);
-            showIndicators = shouldShow;
+            // Apply current debug settings
+            UpdateIndicatorVisibility();
         }
         else if (config != null)
         {
@@ -359,11 +410,22 @@ public class SpawnPointManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Sets the visibility of all spawn and target point indicators
+    /// Sets the visibility of all spawn and target point indicators.
+    /// Also updates the centralized DebugSettings.
     /// </summary>
     /// <param name="visible">True to show indicators, false to hide</param>
     public void SetAllIndicatorsVisible(bool visible)
     {
+        // Update centralized debug settings (this will trigger OnDebugSettingsChanged)
+        // Temporarily unsubscribe to avoid double-update
+        DebugSettings.Instance.OnSettingsChanged -= OnDebugSettingsChanged;
+        
+        DebugSettings.Instance.ShowSpawnPointIndicators = visible;
+        DebugSettings.Instance.ShowTargetPointIndicators = visible;
+        
+        // Re-subscribe
+        DebugSettings.Instance.OnSettingsChanged += OnDebugSettingsChanged;
+        
         // Update spawn point indicators
         if (spawnPoints != null)
         {

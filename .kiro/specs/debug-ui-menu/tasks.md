@@ -1,0 +1,157 @@
+# Implementation Plan
+
+- [x] 1. Set up core infrastructure and attributes
+  - [x] 1.1 Create DebugCategoryAttribute for categorizing debug properties
+    - Create `Assets/Scripts/Data/DebugCategoryAttribute.cs`
+    - Implement AttributeUsage for properties with Category string property
+    - _Requirements: 4.1, 5.2_
+  - [x] 1.2 Update DebugSettings with category attributes
+    - Add DebugCategoryAttribute to existing boolean properties
+    - Group: "Path Visualization" for spline/waypoint settings
+    - Group: "Point Indicators" for spawn/target point settings
+    - _Requirements: 4.1, 4.3_
+  - [ ]* 1.3 Write property test for category attribute reflection
+    - **Property 8: Category Grouping Correctness**
+    - **Validates: Requirements 4.1, 4.2, 4.3, 5.2**
+
+- [x] 2. Implement Konami Code Detection
+  - [x] 2.1 Create KonamiInput enum and KonamiCodeDetector class
+    - Create `Assets/Scripts/UI/KonamiCodeDetector.cs`
+    - Implement enum for Up, Down, Left, Right, A, B inputs
+    - Track sequence progress with timeout reset (2 seconds)
+    - Use thumbstick threshold of 0.7 for directional inputs
+    - Fire OnKonamiCodeEntered event on successful sequence
+    - _Requirements: 8.2_
+  - [ ]* 2.2 Write property test for Konami code detection
+    - **Property 11: Konami Code Detection**
+    - **Validates: Requirements 8.2**
+
+- [x] 3. Implement MenuPaper base class and paper system
+  - [x] 3.1 Create MenuPaper abstract base class
+    - Create `Assets/Scripts/UI/Menu/MenuPaper.cs`
+    - Implement paperTitle, contentRoot, isUnlockedByDefault fields
+    - Add IsUnlocked property, Initialize/OnFocus/OnUnfocus/RefreshContent methods
+    - Add Unlock() method
+    - _Requirements: 2.1, 2.2_
+  - [x] 3.2 Create PaperManager for paper collection management
+    - Create `Assets/Scripts/UI/Menu/PaperManager.cs`
+    - Manage list of MenuPapers
+    - Implement FocusPaper, AddPaper, RefreshPaperVisibility methods
+    - Track currently focused paper
+    - _Requirements: 2.1, 2.2, 2.3, 2.4_
+  - [ ]* 3.3 Write property test for paper visibility consistency
+    - **Property 3: Unlocked Papers Visibility Consistency**
+    - **Validates: Requirements 2.1, 2.4**
+  - [ ]* 3.4 Write property test for paper focus exclusivity
+    - **Property 4: Paper Focus Exclusivity**
+    - **Validates: Requirements 2.2, 2.3**
+
+- [x] 4. Implement DebugPaper with reflection-based UI generation
+  - [x] 4.1 Create DebugToggleBinding data class
+    - Create `Assets/Scripts/UI/Menu/DebugToggleBinding.cs`
+    - Store PropertyInfo, Toggle reference, Category, DisplayName, Tooltip
+    - Implement SyncFromSettings and SyncToSettings methods
+    - _Requirements: 3.2, 3.3_
+  - [x] 4.2 Create DebugPaper class extending MenuPaper
+    - Create `Assets/Scripts/UI/Menu/DebugPaper.cs`
+    - Use reflection to discover boolean properties in DebugSettings
+    - Generate toggles grouped by DebugCategoryAttribute
+    - Create category headers with Toggle All buttons
+    - Subscribe to DebugSettings.OnSettingsChanged for external sync
+    - Set isUnlockedByDefault = false
+    - _Requirements: 3.1, 3.2, 3.3, 4.1, 4.2, 5.1, 5.2, 5.3, 6.1, 6.2_
+  - [ ]* 4.3 Write property test for toggle count matching
+    - **Property 5: Toggle Count Matches Debug Properties**
+    - **Validates: Requirements 3.1, 5.1**
+  - [ ]* 4.4 Write property test for toggle-to-settings sync
+    - **Property 6: Toggle-to-Settings Synchronization**
+    - **Validates: Requirements 3.2**
+  - [ ]* 4.5 Write property test for settings-to-toggle sync
+    - **Property 7: Settings-to-Toggle Synchronization (Round Trip)**
+    - **Validates: Requirements 3.3**
+  - [ ]* 4.6 Write property test for Toggle All button presence
+    - **Property 9: Toggle All Button Presence**
+    - **Validates: Requirements 6.1**
+  - [ ]* 4.7 Write property test for Toggle All majority logic
+    - **Property 10: Toggle All Majority Logic**
+    - **Validates: Requirements 6.2**
+
+- [ ] 5. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 6. Implement AnnouncementBoardController
+  - [x] 6.1 Create AnnouncementBoardController class
+    - Create `Assets/Scripts/UI/Menu/AnnouncementBoardController.cs`
+    - Implement Show/Hide/ToggleVisibility methods
+    - Calculate spawn position (1.5m in front, eye level, facing player)
+    - Track isVisible and isDebugUnlocked state
+    - Wire up X button input for toggle
+    - Integrate KonamiCodeDetector for debug unlock
+    - Fire OnBoardOpened/OnBoardClosed/OnDebugUnlocked events
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 7.1, 7.2, 8.1, 8.2, 8.3, 8.4_
+  - [ ]* 6.2 Write property test for toggle visibility idempotence
+    - **Property 1: Toggle Visibility Idempotence**
+    - **Validates: Requirements 1.1, 7.2**
+  - [ ]* 6.3 Write property test for board positioning
+    - **Property 2: Board Positioning Within Bounds**
+    - **Validates: Requirements 1.3**
+
+- [x] 7. Create SettingsPaper placeholder
+  - [x] 7.1 Create SettingsPaper class extending MenuPaper
+    - Create `Assets/Scripts/UI/Menu/SettingsPaper.cs`
+    - Set isUnlockedByDefault = true
+    - Implement placeholder content (can be expanded later)
+    - _Requirements: 1.4, 2.1_
+
+- [x] 8. Create UI Prefabs
+  - [x] 8.1 Create toggle prefab for debug options
+    - Create `Assets/Prefabs/UI/Menu/DebugToggle.prefab`
+    - World-space Toggle with label TextMeshPro
+    - XR interaction support (XRSimpleInteractable)
+    - _Requirements: 3.1_
+  - [x] 8.2 Create category header prefab
+    - Create `Assets/Prefabs/UI/Menu/CategoryHeader.prefab`
+    - Header label with Toggle All button
+    - _Requirements: 4.2, 6.1_
+  - [x] 8.3 Create paper prefab template
+    - Create `Assets/Prefabs/UI/Menu/MenuPaperTemplate.prefab`
+    - Paper visual with content area
+    - Pin/tack visuals at corners
+    - _Requirements: 9.2_
+  - [x] 8.4 Create announcement board prefab
+    - Create `Assets/Prefabs/UI/AnnouncementBoard.prefab`
+    - Cork/wooden board visual
+    - Paper spawn positions
+    - Close button
+    - Attach AnnouncementBoardController, PaperManager, KonamiCodeDetector
+    - _Requirements: 9.1, 7.1_
+
+- [x] 9. Integrate with scene
+  - [x] 9.1 Add AnnouncementBoard prefab to MainScene
+    - Position board initially hidden
+    - Configure input action references
+    - Wire up DebugSettings reference
+    - _Requirements: 1.1, 8.1_
+  - [x] 9.2 Configure VR input bindings
+    - Map X button to board toggle
+    - Ensure thumbstick and A/B button inputs available for Konami
+    - _Requirements: 1.1, 8.2_
+
+- [x] 10. Add animations and audio feedback
+  - [x] 10.1 Implement board show/hide animations
+    - Scale animation with bounce on show
+    - Scale down with fade on hide
+    - _Requirements: 1.1_
+  - [x] 10.2 Implement paper focus animations
+    - Scale up and move forward on focus
+    - Dim and move back on unfocus
+    - _Requirements: 2.2, 2.3_
+  - [x] 10.3 Implement debug unlock animation and audio
+    - Paper slide-in animation
+    - Pin stick sound effect
+    - Success chime audio
+    - "Debug Mode Unlocked" message display
+    - _Requirements: 8.3_
+
+- [ ] 11. Final Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
