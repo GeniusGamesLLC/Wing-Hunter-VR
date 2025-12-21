@@ -1,0 +1,26 @@
+<linker>
+  <!-- Preserve OpenXR Meta subsystem providers that use reflection -->
+  <assembly fullname="Unity.XR.OpenXR.Features.MetaQuestSupport">
+    <type fullname="UnityEngine.XR.OpenXR.Features.Meta.MetaOpenXRCameraSubsystem+MetaOpenXRProvider" preserve="all"/>
+    <type fullname="UnityEngine.XR.OpenXR.Features.Meta.MetaOpenXRSessionSubsystem+MetaOpenXRProvider" preserve="all"/>
+    <type fullname="UnityEngine.XR.OpenXR.Features.Meta.MetaOpenXRPlaneSubsystem+MetaOpenXRProvider" preserve="all"/>
+    <type fullname="UnityEngine.XR.OpenXR.Features.Meta.MetaOpenXRAnchorSubsystem+MetaOpenXRProvider" preserve="all"/>
+    <type fullname="UnityEngine.XR.OpenXR.Features.Meta.MetaOpenXROcclusionSubsystem+MetaOpenXRProvider" preserve="all"/>
+    <type fullname="UnityEngine.XR.OpenXR.Features.Meta.MetaOpenXRBoundingBoxSubsystem+MetaOpenXRProvider" preserve="all"/>
+  </assembly>
+  
+  <!-- Preserve core OpenXR subsystem types -->
+  <assembly fullname="Unity.XR.OpenXR">
+    <type fullname="UnityEngine.XR.OpenXR.*" preserve="all"/>
+  </assembly>
+  
+  <!-- Preserve XR Management types -->
+  <assembly fullname="Unity.XR.Management">
+    <type fullname="UnityEngine.XR.Management.*" preserve="all"/>
+  </assembly>
+  
+  <!-- Preserve AR Foundation subsystems if used -->
+  <assembly fullname="Unity.XR.ARFoundation">
+    <type fullname="UnityEngine.XR.ARFoundation.*" preserve="all"/>
+  </assembly>
+</linker>
