@@ -14,8 +14,8 @@ TagManager:
   - Spawner Contact
   - Placeable Surface
   - IgnoreShootRay
-  - 
-  - 
+  - FocusedPaper
+  - VRController
   - 
   - 
   - 

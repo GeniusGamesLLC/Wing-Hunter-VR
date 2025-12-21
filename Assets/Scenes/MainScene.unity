@@ -2776,6 +2776,7 @@ GameObject:
   m_Component:
   - component: {fileID: 473685930}
   - component: {fileID: 473685929}
+  - component: {fileID: 473685931}
   m_Layer: 0
   m_Name: GunSelectionManager
   m_TagString: Untagged
@@ -2821,6 +2822,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 70349045}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &473685931
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 473685928}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72c71bf7ebe05402e80b2947983e8920, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InteractorMuzzleAligner
+  gunSelectionManager: {fileID: 0}
+  nearFarInteractor: {fileID: 0}
+  debugLogging: 1
 --- !u!1 &476463656
 GameObject:
   m_ObjectHideFlags: 0
@@ -4877,6 +4893,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4200000000000000000, guid: d4313ab821031475ea11774f693e0de9, type: 3}
   m_PrefabInstance: {fileID: 1059234866}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1067736098 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4000000000000000, guid: 35570644343894df88e50254d703c42c, type: 3}
+  m_PrefabInstance: {fileID: 1812979881}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1067736100 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2934211727035649091, guid: 9ff1190702dd24f5bb1e4dba7355d3f7, type: 3}
@@ -4887,6 +4908,25 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4400000000000, guid: 35570644343894df88e50254d703c42c, type: 3}
   m_PrefabInstance: {fileID: 1812979881}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1067736105
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1067736098}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 959c8bbbd4db24a59adf6e93bdd55016, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocomotionDisabler
+  moveProvider: {fileID: 0}
+  turnProvider: {fileID: 0}
+  snapTurnProvider: {fileID: 0}
+  paperManager: {fileID: 0}
+  disableDelay: 0.05
+  enableDelay: 0.35
+  debugMode: 0
 --- !u!1 &1078226092
 GameObject:
   m_ObjectHideFlags: 0
@@ -7881,6 +7921,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 119401083155021, guid: 35570644343894df88e50254d703c42c, type: 3}
+      propertyPath: focusHeightOffset
+      value: -0.15
+      objectReference: {fileID: 0}
+    - target: {fileID: 119401083155021, guid: 35570644343894df88e50254d703c42c, type: 3}
+      propertyPath: focusDistanceFromPlayer
+      value: 0.6
+      objectReference: {fileID: 0}
     - target: {fileID: 4000000000000000, guid: 35570644343894df88e50254d703c42c, type: 3}
       propertyPath: m_Name
       value: AnnouncementBoard
@@ -7889,10 +7937,21 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 694488529}
+    - target: {fileID: 6244038016553121305, guid: 35570644343894df88e50254d703c42c, type: 3}
+      propertyPath: focusHeightOffset
+      value: -0.15
+      objectReference: {fileID: 0}
+    - target: {fileID: 6244038016553121305, guid: 35570644343894df88e50254d703c42c, type: 3}
+      propertyPath: focusDistanceFromPlayer
+      value: 0.6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4000000000000000, guid: 35570644343894df88e50254d703c42c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1067736105}
     - targetCorrespondingSourceObject: {fileID: 9005964528985408940, guid: 35570644343894df88e50254d703c42c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 0}
