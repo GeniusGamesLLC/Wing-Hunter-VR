@@ -11,7 +11,7 @@ public class SettingsPaper : MenuPaper
     [Header("Settings Paper Configuration")]
     [SerializeField] private GameObject placeholderTextPrefab;
     
-    private TextMeshProUGUI placeholderText;
+    private TextMeshProUGUI settingsText;
     private bool contentInitialized;
 
     /// <summary>
@@ -25,9 +25,63 @@ public class SettingsPaper : MenuPaper
         
         if (!contentInitialized)
         {
-            SetupPlaceholderContent();
+            SetupSettingsContent();
+            SetupPlaceholderContentIfNeeded();
             contentInitialized = true;
         }
+    }
+    
+    /// <summary>
+    /// Sets up placeholder content if not already assigned.
+    /// </summary>
+    private void SetupPlaceholderContentIfNeeded()
+    {
+        if (placeholderContent == null)
+        {
+            // Create placeholder content container
+            GameObject placeholderObj = new GameObject("PlaceholderContent");
+            placeholderObj.transform.SetParent(transform, false);
+            placeholderObj.transform.localPosition = new Vector3(0, 0, -0.005f);
+            placeholderObj.layer = 5; // UI layer
+            
+            // Add placeholder generator
+            var generator = placeholderObj.AddComponent<PlaceholderContentGenerator>();
+            generator.SetTitle("Settings");
+            
+            placeholderContent = placeholderObj.transform;
+            
+            // Start in compact state (placeholder visible, content hidden)
+            placeholderObj.SetActive(true);
+            if (contentRoot != null)
+            {
+                contentRoot.gameObject.SetActive(false);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Sets up the actual settings content.
+    /// </summary>
+    private void SetupSettingsContent()
+    {
+        if (contentRoot == null)
+        {
+            Debug.LogWarning("[SettingsPaper] Content root is not assigned.");
+            return;
+        }
+
+        // Create settings text if no prefab is assigned
+        if (placeholderTextPrefab == null)
+        {
+            CreateDefaultSettingsText();
+        }
+        else
+        {
+            GameObject textObj = Instantiate(placeholderTextPrefab, contentRoot);
+            settingsText = textObj.GetComponent<TextMeshProUGUI>();
+        }
+
+        RefreshContent();
     }
 
     /// <summary>
@@ -53,51 +107,25 @@ public class SettingsPaper : MenuPaper
     public override void RefreshContent()
     {
         // Placeholder - future implementation will refresh actual settings UI
-        if (placeholderText != null)
+        if (settingsText != null)
         {
-            placeholderText.text = "Settings\n\nComing Soon...";
+            settingsText.text = "Settings\n\nComing Soon...";
         }
     }
 
     /// <summary>
-    /// Sets up placeholder content for the settings paper.
-    /// This will be replaced with actual settings UI in future implementation.
+    /// Creates a default settings text element when no prefab is provided.
     /// </summary>
-    private void SetupPlaceholderContent()
+    private void CreateDefaultSettingsText()
     {
-        if (contentRoot == null)
-        {
-            Debug.LogWarning("[SettingsPaper] Content root is not assigned.");
-            return;
-        }
-
-        // Create placeholder text if no prefab is assigned
-        if (placeholderTextPrefab == null)
-        {
-            CreateDefaultPlaceholderText();
-        }
-        else
-        {
-            GameObject textObj = Instantiate(placeholderTextPrefab, contentRoot);
-            placeholderText = textObj.GetComponent<TextMeshProUGUI>();
-        }
-
-        RefreshContent();
-    }
-
-    /// <summary>
-    /// Creates a default placeholder text element when no prefab is provided.
-    /// </summary>
-    private void CreateDefaultPlaceholderText()
-    {
-        GameObject textObj = new GameObject("PlaceholderText");
+        GameObject textObj = new GameObject("SettingsText");
         textObj.transform.SetParent(contentRoot, false);
         
-        placeholderText = textObj.AddComponent<TextMeshProUGUI>();
-        placeholderText.text = "Settings\n\nComing Soon...";
-        placeholderText.fontSize = 24;
-        placeholderText.alignment = TextAlignmentOptions.Center;
-        placeholderText.color = Color.black;
+        settingsText = textObj.AddComponent<TextMeshProUGUI>();
+        settingsText.text = "Settings\n\nComing Soon...";
+        settingsText.fontSize = 24;
+        settingsText.alignment = TextAlignmentOptions.Center;
+        settingsText.color = Color.black;
         
         // Set up RectTransform for proper positioning
         RectTransform rectTransform = textObj.GetComponent<RectTransform>();

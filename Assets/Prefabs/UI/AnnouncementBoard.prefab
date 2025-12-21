@@ -77,6 +77,8 @@ MonoBehaviour:
   - {fileID: 119401083155021}
   - {fileID: 6244038016553121305}
   paperSpawnParent: {fileID: 4400000000003}
+  labelTabPrefab: {fileID: 1000000000000000, guid: 8a790a9fb108541c19e0b2ecff2713cf, type: 3}
+  labelTabYOffset: 0.25
 --- !u!114 &114400000000003
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -117,7 +119,7 @@ Transform:
   m_GameObject: {fileID: 4000000000000003}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.02}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1323,6 +1325,13 @@ MonoBehaviour:
   paperTitle: Settings
   contentRoot: {fileID: 636845269824773411}
   isUnlockedByDefault: 1
+  unfocusedScale: {x: 1, y: 1, z: 1}
+  focusedScale: {x: 1.1, y: 1.1, z: 1}
+  focusedZOffset: -0.1
+  placeholderContent: {fileID: 0}
+  moveToPlayerOnFocus: 1
+  focusDistanceFromPlayer: 0.6
+  focusHeightOffset: -0.15
   paperAnimator: {fileID: 0}
   placeholderTextPrefab: {fileID: 0}
 --- !u!114 &7416726893778227809
@@ -1484,6 +1493,13 @@ MonoBehaviour:
   paperTitle: Debug
   contentRoot: {fileID: 4999798031903154122}
   isUnlockedByDefault: 0
+  unfocusedScale: {x: 1, y: 1, z: 1}
+  focusedScale: {x: 1.1, y: 1.1, z: 1}
+  focusedZOffset: -0.1
+  placeholderContent: {fileID: 0}
+  moveToPlayerOnFocus: 1
+  focusDistanceFromPlayer: 0.6
+  focusHeightOffset: -0.15
   paperAnimator: {fileID: 0}
   togglePrefab: {fileID: 1000000000000000, guid: 08763bd6cad6e4176a34473b51fcbc3e, type: 3}
   categoryHeaderPrefab: {fileID: 2000000000000000, guid: 7a0f4fa142eb347599642a99147448e9, type: 3}

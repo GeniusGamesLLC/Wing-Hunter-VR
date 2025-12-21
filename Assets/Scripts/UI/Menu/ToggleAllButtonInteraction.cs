@@ -3,15 +3,15 @@ using UnityEngine.UI;
 using DuckHunt.VR;
 
 /// <summary>
-/// Handles VR interaction for debug toggles on the announcement board.
+/// Handles VR interaction for Toggle All buttons on the debug paper.
 /// Uses the standardized VRInteractable base class.
-/// Prevents paper unfocus when interacting with toggles.
-/// Requirements: 12.1, 12.2
+/// Prevents paper unfocus when interacting with buttons.
+/// Requirements: 12.2
 /// </summary>
-[RequireComponent(typeof(Toggle))]
-public class DebugToggleInteraction : VRInteractable
+[RequireComponent(typeof(Button))]
+public class ToggleAllButtonInteraction : VRInteractable
 {
-    private Toggle toggle;
+    private Button button;
     private MenuPaper parentPaper;
     
     /// <summary>
@@ -22,7 +22,7 @@ public class DebugToggleInteraction : VRInteractable
 
     protected override void Awake()
     {
-        toggle = GetComponent<Toggle>();
+        button = GetComponent<Button>();
         
         // Find parent paper for focus preservation
         parentPaper = GetComponentInParent<MenuPaper>();
@@ -32,15 +32,15 @@ public class DebugToggleInteraction : VRInteractable
 
     protected override void HandleActivation()
     {
-        // Set flag to block paper interaction during toggle activation
+        // Set flag to block paper interaction during button activation
         IsInteractionInProgress = true;
         
         try
         {
-            // Toggle the value without triggering paper unfocus
-            if (toggle != null)
+            // Invoke the button click without triggering paper unfocus
+            if (button != null)
             {
-                toggle.isOn = !toggle.isOn;
+                button.onClick.Invoke();
             }
             
             // Call base to fire the OnActivated event
@@ -60,7 +60,7 @@ public class DebugToggleInteraction : VRInteractable
     {
         base.HandleHoverStart();
         
-        // Ensure parent paper remains focused when hovering over toggle
+        // Ensure parent paper remains focused when hovering over button
         if (parentPaper != null && !parentPaper.IsFocused)
         {
             var paperManager = FindObjectOfType<PaperManager>();

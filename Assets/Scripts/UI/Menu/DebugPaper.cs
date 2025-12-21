@@ -11,15 +11,46 @@ using DuckHunt.Data;
 /// Debug paper that displays all debug options from DebugSettings.
 /// Uses reflection to auto-generate toggles grouped by DebugCategoryAttribute.
 /// Hidden by default, unlocked via Konami code.
+/// Supports scrolling when content exceeds the visible area.
 /// </summary>
 public class DebugPaper : MenuPaper
 {
     [Header("Debug Paper Configuration")]
     [SerializeField] private GameObject togglePrefab;
     [SerializeField] private GameObject categoryHeaderPrefab;
-    [SerializeField] private float toggleSpacing = 30f;
-    [SerializeField] private float categorySpacing = 40f;
-    [SerializeField] private float headerHeight = 35f;
+    [Tooltip("Vertical spacing between toggles (in world units, e.g., 0.035 = 3.5cm)")]
+    [SerializeField] private float toggleSpacing = 0.035f;
+    [Tooltip("Extra vertical spacing after each category (in world units)")]
+    [SerializeField] private float categorySpacing = 0.02f;
+    [Tooltip("Height of category headers (in world units)")]
+    [SerializeField] private float headerHeight = 0.04f;
+    
+    [Header("Layout Configuration")]
+    [Tooltip("Left margin from paper edge (in world units, e.g., 0.02 = 2cm)")]
+    [SerializeField] private float leftMargin = 0.02f;
+    [Tooltip("Indentation for category headers from left margin (in world units)")]
+    [SerializeField] private float categoryIndent = 0f;
+    [Tooltip("Indentation for toggles under category headers (in world units, e.g., 0.03 = 3cm)")]
+    [SerializeField] private float toggleIndent = 0.03f;
+    
+    [Header("Scrolling")]
+    [Tooltip("Reference to the scroll controller (auto-created if null)")]
+    [SerializeField] private PaperScrollController scrollController;
+    [Tooltip("Paper width for scroll indicator positioning (in world units)")]
+    [SerializeField] private float paperWidth = 0.25f;
+    [Tooltip("Paper height / viewport height for scroll calculations (in world units)")]
+    [SerializeField] private float paperHeight = 0.35f;
+    
+    // Actual spacing values used at runtime (auto-corrected if serialized values are too large)
+    private float _toggleSpacing;
+    private float _categorySpacing;
+    private float _headerHeight;
+    
+    // Scroll indicator generator
+    private ScrollIndicatorGenerator scrollIndicatorGenerator;
+    
+    // Total content height after generating toggles
+    private float totalContentHeight;
 
     /// <summary>
     /// Dictionary mapping category names to their toggle bindings.
@@ -64,12 +95,158 @@ public class DebugPaper : MenuPaper
 
         GenerateTogglesFromDebugSettings();
         SubscribeToSettingsChanges();
+        SetupPlaceholderContentIfNeeded();
+        SetupScrolling();
+    }
+    
+    /// <summary>
+    /// Sets up placeholder content if not already assigned.
+    /// </summary>
+    private void SetupPlaceholderContentIfNeeded()
+    {
+        if (placeholderContent == null)
+        {
+            // Create placeholder content container
+            GameObject placeholderObj = new GameObject("PlaceholderContent");
+            placeholderObj.transform.SetParent(transform, false);
+            placeholderObj.transform.localPosition = new Vector3(0, 0, -0.005f);
+            placeholderObj.layer = 5; // UI layer
+            
+            // Add placeholder generator
+            var generator = placeholderObj.AddComponent<PlaceholderContentGenerator>();
+            generator.SetTitle("Debug");
+            
+            placeholderContent = placeholderObj.transform;
+            
+            // Start in compact state (placeholder visible, content hidden)
+            placeholderObj.SetActive(true);
+            if (contentRoot != null)
+            {
+                contentRoot.gameObject.SetActive(false);
+            }
+        }
     }
 
     private void OnDestroy()
     {
         UnsubscribeFromSettingsChanges();
+        
+        // Clean up scroll indicator
+        if (scrollIndicatorGenerator != null)
+        {
+            scrollIndicatorGenerator.Cleanup();
+        }
     }
+    
+    /// <summary>
+    /// Sets up scrolling functionality after toggle generation.
+    /// </summary>
+    private void SetupScrolling()
+    {
+        // Create scroll controller if not assigned
+        if (scrollController == null)
+        {
+            scrollController = gameObject.AddComponent<PaperScrollController>();
+        }
+        
+        // Create scroll indicator generator
+        scrollIndicatorGenerator = gameObject.AddComponent<ScrollIndicatorGenerator>();
+        scrollIndicatorGenerator.GenerateScrollIndicator(paperWidth, paperHeight, transform);
+        
+        // Configure scroll controller with the generated indicators
+        if (scrollIndicatorGenerator.ScrollIndicatorRoot != null)
+        {
+            scrollController.SetScrollIndicator(
+                scrollIndicatorGenerator.ScrollIndicatorRoot,
+                scrollIndicatorGenerator.HandleRectTransform
+            );
+        }
+        
+        if (scrollIndicatorGenerator.TopBoundaryIndicator != null && 
+            scrollIndicatorGenerator.BottomBoundaryIndicator != null)
+        {
+            scrollController.SetBoundaryIndicators(
+                scrollIndicatorGenerator.TopBoundaryIndicator,
+                scrollIndicatorGenerator.BottomBoundaryIndicator
+            );
+        }
+        
+        // Subscribe to scroll position changes to update the indicator
+        scrollController.OnScrollPositionChanged += OnScrollPositionChanged;
+        
+        // Configure scroll bounds based on content
+        ConfigureScrollBounds();
+        
+        Debug.Log($"[DebugPaper] Scrolling setup complete. Content height: {totalContentHeight}, Paper height: {paperHeight}");
+    }
+    
+    /// <summary>
+    /// Configures scroll bounds based on generated content height.
+    /// </summary>
+    private void ConfigureScrollBounds()
+    {
+        if (scrollController == null || contentRoot == null) return;
+        
+        // Get or create RectTransforms for viewport and content
+        RectTransform viewportRect = GetOrCreateViewportRect();
+        RectTransform contentRect = GetOrCreateContentRect();
+        
+        if (viewportRect != null && contentRect != null)
+        {
+            // Set content height based on generated toggles
+            contentRect.sizeDelta = new Vector2(contentRect.sizeDelta.x, totalContentHeight);
+            
+            scrollController.SetScrollTargets(viewportRect, contentRect);
+            scrollController.CalculateScrollBounds();
+        }
+    }
+    
+    /// <summary>
+    /// Gets or creates a viewport RectTransform for scrolling.
+    /// </summary>
+    private RectTransform GetOrCreateViewportRect()
+    {
+        // Use the paper itself as the viewport
+        RectTransform rect = GetComponent<RectTransform>();
+        if (rect == null)
+        {
+            rect = gameObject.AddComponent<RectTransform>();
+            rect.sizeDelta = new Vector2(paperWidth, paperHeight);
+        }
+        return rect;
+    }
+    
+    /// <summary>
+    /// Gets or creates a content RectTransform for scrolling.
+    /// </summary>
+    private RectTransform GetOrCreateContentRect()
+    {
+        if (contentRoot == null) return null;
+        
+        RectTransform rect = contentRoot.GetComponent<RectTransform>();
+        if (rect == null)
+        {
+            rect = contentRoot.gameObject.AddComponent<RectTransform>();
+        }
+        return rect;
+    }
+    
+    /// <summary>
+    /// Called when scroll position changes.
+    /// </summary>
+    private void OnScrollPositionChanged(float normalizedPosition)
+    {
+        // Update scroll indicator handle position
+        if (scrollIndicatorGenerator != null)
+        {
+            scrollIndicatorGenerator.UpdateHandlePosition(normalizedPosition);
+        }
+    }
+    
+    /// <summary>
+    /// Gets the scroll controller (for testing purposes).
+    /// </summary>
+    public PaperScrollController ScrollController => scrollController;
 
     /// <summary>
     /// Subscribes to DebugSettings.OnSettingsChanged for external sync.
@@ -120,6 +297,13 @@ public class DebugPaper : MenuPaper
             return;
         }
 
+        // Auto-correct spacing values if they seem to be in wrong units (> 1 means likely pixels instead of meters)
+        _toggleSpacing = toggleSpacing > 1f ? toggleSpacing * 0.001f : toggleSpacing;
+        _categorySpacing = categorySpacing > 1f ? categorySpacing * 0.001f : categorySpacing;
+        _headerHeight = headerHeight > 1f ? headerHeight * 0.001f : headerHeight;
+        
+        Debug.Log($"[DebugPaper] Using spacing values: toggle={_toggleSpacing}, category={_categorySpacing}, header={_headerHeight}");
+
         // Clear existing
         ClearGeneratedUI();
 
@@ -150,18 +334,30 @@ public class DebugPaper : MenuPaper
             groupedProperties[category].Add(prop);
         }
 
-        // Generate UI for each category
+        // Generate UI for each category with manual Y positioning (world-space units)
+        // Y starts at 0 and goes negative (down) since prefabs are anchored to top
         float currentY = 0f;
+        
+        Debug.Log($"[DebugPaper] Generating UI for {groupedProperties.Count} categories");
         foreach (var kvp in groupedProperties.OrderBy(k => k.Key))
         {
             string category = kvp.Key;
             var categoryProperties = kvp.Value;
 
+            Debug.Log($"[DebugPaper] Creating category '{category}' with {categoryProperties.Count} properties at Y={currentY}");
             CreateCategorySection(category, categoryProperties.ToArray(), ref currentY);
         }
 
+        Debug.Log($"[DebugPaper] Finished generating UI. Final Y position: {currentY}");
+        
+        // Store total content height (absolute value since Y goes negative)
+        totalContentHeight = Mathf.Abs(currentY);
+        
         // Initial sync from settings
         SyncAllTogglesFromSettings();
+        
+        // Reconfigure scroll bounds after content generation
+        ConfigureScrollBounds();
     }
 
     /// <summary>
@@ -185,9 +381,9 @@ public class DebugPaper : MenuPaper
         {
             CreateToggleForProperty(prop, category, ref currentY);
         }
-
-        // Add spacing after category
-        currentY -= categorySpacing;
+        
+        // Add extra spacing after category
+        currentY -= _categorySpacing;
     }
 
     /// <summary>
@@ -200,6 +396,61 @@ public class DebugPaper : MenuPaper
         if (categoryHeaderPrefab != null)
         {
             headerObj = Instantiate(categoryHeaderPrefab, contentRoot);
+            headerObj.name = $"Header_{category}";
+            
+            // Calculate X position with left margin and category indent
+            float xPosition = leftMargin + categoryIndent;
+            
+            // Position the header using localPosition (works for both Transform and RectTransform)
+            // For 3D world-space UI, we use localPosition directly
+            headerObj.transform.localPosition = new Vector3(xPosition, currentY, 0);
+            
+            // Also set RectTransform if available
+            var rectTransform = headerObj.GetComponent<RectTransform>();
+            if (rectTransform != null)
+            {
+                rectTransform.anchoredPosition = new Vector2(xPosition, currentY);
+            }
+            
+            Debug.Log($"[DebugPaper] Header '{category}' positioned at X={xPosition}, Y={currentY}");
+            
+            // Try TextMeshProUGUI first (Canvas UI), then TextMeshPro (3D world space)
+            var labelTextUGUI = headerObj.GetComponentInChildren<TextMeshProUGUI>();
+            if (labelTextUGUI != null)
+            {
+                labelTextUGUI.text = category;
+                // Ensure left alignment
+                labelTextUGUI.alignment = TextAlignmentOptions.Left;
+            }
+            else
+            {
+                // Try 3D TextMeshPro component
+                var labelText3D = headerObj.GetComponentInChildren<TMPro.TextMeshPro>();
+                if (labelText3D != null)
+                {
+                    labelText3D.text = category;
+                    // Ensure left alignment
+                    labelText3D.alignment = TextAlignmentOptions.Left;
+                }
+            }
+
+            var button = headerObj.GetComponentInChildren<Button>();
+            if (button != null)
+            {
+                categoryToggleAllButtons[category] = button;
+                string cat = category;
+                button.onClick.AddListener(() => OnToggleAllPressed(cat));
+                
+                // Add VR interaction component for hover + trigger interaction
+                // This prevents paper unfocus when clicking Toggle All buttons
+                if (button.GetComponent<ToggleAllButtonInteraction>() == null)
+                {
+                    button.gameObject.AddComponent<ToggleAllButtonInteraction>();
+                }
+            }
+            
+            // Move Y down by header height
+            currentY -= _headerHeight;
         }
         else
         {
@@ -207,19 +458,22 @@ public class DebugPaper : MenuPaper
             headerObj = new GameObject($"Header_{category}");
             headerObj.transform.SetParent(contentRoot, false);
 
+            // Calculate X position with left margin and category indent
+            float xPosition = leftMargin + categoryIndent;
+
             // Add layout components
             var rectTransform = headerObj.AddComponent<RectTransform>();
             rectTransform.anchorMin = new Vector2(0, 1);
             rectTransform.anchorMax = new Vector2(1, 1);
-            rectTransform.pivot = new Vector2(0.5f, 1);
-            rectTransform.anchoredPosition = new Vector2(0, currentY);
-            rectTransform.sizeDelta = new Vector2(0, headerHeight);
+            rectTransform.pivot = new Vector2(0, 1); // Left-aligned pivot
+            rectTransform.anchoredPosition = new Vector2(xPosition, currentY);
+            rectTransform.sizeDelta = new Vector2(0, _headerHeight);
 
             // Add horizontal layout
             var layout = headerObj.AddComponent<HorizontalLayoutGroup>();
             layout.childAlignment = TextAnchor.MiddleLeft;
             layout.spacing = 10f;
-            layout.padding = new RectOffset(5, 5, 0, 0);
+            layout.padding = new RectOffset(0, 5, 0, 0); // No left padding since we use margin
 
             // Create label
             var labelObj = new GameObject("Label");
@@ -228,8 +482,10 @@ public class DebugPaper : MenuPaper
             labelText.text = category;
             labelText.fontSize = 16;
             labelText.fontStyle = FontStyles.Bold;
+            labelText.alignment = TextAlignmentOptions.Left; // Left alignment
+            labelText.color = new Color(0.15f, 0.1f, 0.05f, 1f);
             var labelRect = labelObj.GetComponent<RectTransform>();
-            labelRect.sizeDelta = new Vector2(150, headerHeight);
+            labelRect.sizeDelta = new Vector2(150, _headerHeight);
 
             // Create Toggle All button
             var buttonObj = new GameObject("ToggleAllButton");
@@ -260,33 +516,10 @@ public class DebugPaper : MenuPaper
             // Wire up button click
             string cat = category; // Capture for closure
             button.onClick.AddListener(() => OnToggleAllPressed(cat));
+            
+            // Move Y down by header height
+            currentY -= _headerHeight;
         }
-
-        // If using prefab, find and configure components
-        if (categoryHeaderPrefab != null)
-        {
-            var labelText = headerObj.GetComponentInChildren<TextMeshProUGUI>();
-            if (labelText != null)
-            {
-                labelText.text = category;
-            }
-
-            var button = headerObj.GetComponentInChildren<Button>();
-            if (button != null)
-            {
-                categoryToggleAllButtons[category] = button;
-                string cat = category;
-                button.onClick.AddListener(() => OnToggleAllPressed(cat));
-            }
-
-            var rectTransform = headerObj.GetComponent<RectTransform>();
-            if (rectTransform != null)
-            {
-                rectTransform.anchoredPosition = new Vector2(rectTransform.anchoredPosition.x, currentY);
-            }
-        }
-
-        currentY -= headerHeight;
     }
 
     /// <summary>
@@ -306,6 +539,46 @@ public class DebugPaper : MenuPaper
         if (togglePrefab != null)
         {
             toggleObj = Instantiate(togglePrefab, contentRoot);
+            toggleObj.name = $"Toggle_{property.Name}";
+            
+            // Calculate X position with left margin and toggle indent (under category headers)
+            float xPosition = leftMargin + toggleIndent;
+            
+            // Position the toggle using localPosition (works for both Transform and RectTransform)
+            // For 3D world-space UI, we use localPosition directly
+            toggleObj.transform.localPosition = new Vector3(xPosition, currentY, 0);
+            
+            // Also set RectTransform if available
+            var rectTransform = toggleObj.GetComponent<RectTransform>();
+            if (rectTransform != null)
+            {
+                rectTransform.anchoredPosition = new Vector2(xPosition, currentY);
+            }
+            
+            Debug.Log($"[DebugPaper] Toggle '{property.Name}' positioned at X={xPosition}, Y={currentY}");
+            
+            // Configure label - Try TextMeshProUGUI first (Canvas UI), then TextMeshPro (3D world space)
+            var labelTextUGUI = toggleObj.GetComponentInChildren<TextMeshProUGUI>();
+            if (labelTextUGUI != null)
+            {
+                labelTextUGUI.text = displayName;
+                // Ensure left alignment
+                labelTextUGUI.alignment = TextAlignmentOptions.Left;
+            }
+            else
+            {
+                // Try 3D TextMeshPro component
+                var labelText3D = toggleObj.GetComponentInChildren<TMPro.TextMeshPro>();
+                if (labelText3D != null)
+                {
+                    labelText3D.text = displayName;
+                    // Ensure left alignment
+                    labelText3D.alignment = TextAlignmentOptions.Left;
+                }
+            }
+            
+            // Move Y down by toggle spacing
+            currentY -= _toggleSpacing;
         }
         else
         {
@@ -313,18 +586,21 @@ public class DebugPaper : MenuPaper
             toggleObj = new GameObject($"Toggle_{property.Name}");
             toggleObj.transform.SetParent(contentRoot, false);
 
+            // Calculate X position with left margin and toggle indent
+            float xPosition = leftMargin + toggleIndent;
+
             var rectTransform = toggleObj.AddComponent<RectTransform>();
             rectTransform.anchorMin = new Vector2(0, 1);
             rectTransform.anchorMax = new Vector2(1, 1);
-            rectTransform.pivot = new Vector2(0.5f, 1);
-            rectTransform.anchoredPosition = new Vector2(0, currentY);
-            rectTransform.sizeDelta = new Vector2(0, toggleSpacing);
+            rectTransform.pivot = new Vector2(0, 1); // Left-aligned pivot
+            rectTransform.anchoredPosition = new Vector2(xPosition, currentY);
+            rectTransform.sizeDelta = new Vector2(0, _toggleSpacing);
 
             // Add horizontal layout
             var layout = toggleObj.AddComponent<HorizontalLayoutGroup>();
             layout.childAlignment = TextAnchor.MiddleLeft;
             layout.spacing = 10f;
-            layout.padding = new RectOffset(20, 5, 0, 0);
+            layout.padding = new RectOffset(0, 5, 0, 0); // No left padding since we use indent
 
             // Create toggle background
             var toggleBgObj = new GameObject("Background");
@@ -355,8 +631,13 @@ public class DebugPaper : MenuPaper
             var labelText = labelObj.AddComponent<TextMeshProUGUI>();
             labelText.text = displayName;
             labelText.fontSize = 14;
+            labelText.alignment = TextAlignmentOptions.Left; // Left alignment
+            labelText.color = new Color(0.15f, 0.1f, 0.05f, 1f);
             var labelRect = labelObj.GetComponent<RectTransform>();
-            labelRect.sizeDelta = new Vector2(200, toggleSpacing);
+            labelRect.sizeDelta = new Vector2(200, _toggleSpacing);
+            
+            // Move Y down by toggle spacing
+            currentY -= _toggleSpacing;
         }
 
         // Get or configure toggle component
@@ -372,22 +653,6 @@ public class DebugPaper : MenuPaper
             return;
         }
 
-        // Configure label if using prefab
-        if (togglePrefab != null)
-        {
-            var labelText = toggleObj.GetComponentInChildren<TextMeshProUGUI>();
-            if (labelText != null)
-            {
-                labelText.text = displayName;
-            }
-
-            var rectTransform = toggleObj.GetComponent<RectTransform>();
-            if (rectTransform != null)
-            {
-                rectTransform.anchoredPosition = new Vector2(rectTransform.anchoredPosition.x, currentY);
-            }
-        }
-
         // Create binding
         var binding = new DebugToggleBinding(property, toggleComponent, category, displayName, tooltip);
         allBindings.Add(binding);
@@ -401,8 +666,6 @@ public class DebugPaper : MenuPaper
         {
             toggleObj.AddComponent<DebugToggleInteraction>();
         }
-
-        currentY -= toggleSpacing;
     }
 
     /// <summary>
@@ -551,5 +814,22 @@ public class DebugPaper : MenuPaper
     {
         base.OnFocus();
         RefreshContent();
+        
+        // Enable scroll input when paper is focused
+        if (scrollController != null)
+        {
+            scrollController.SetReceivingInput(true);
+        }
+    }
+    
+    public override void OnUnfocus()
+    {
+        base.OnUnfocus();
+        
+        // Disable scroll input when paper loses focus
+        if (scrollController != null)
+        {
+            scrollController.SetReceivingInput(false);
+        }
     }
 }

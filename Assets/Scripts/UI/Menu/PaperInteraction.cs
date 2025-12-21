@@ -4,6 +4,8 @@ using DuckHunt.VR;
 /// <summary>
 /// Handles VR interaction for menu papers.
 /// Uses the standardized VRInteractable base class.
+/// Ignores clicks on interactive elements (toggles, buttons) to preserve focus.
+/// Requirements: 12.3
 /// </summary>
 public class PaperInteraction : VRInteractable
 {
@@ -29,6 +31,13 @@ public class PaperInteraction : VRInteractable
 
     protected override void HandleActivation()
     {
+        // Check if an interactive element (toggle or button) is currently being interacted with
+        // If so, ignore this paper activation to preserve focus
+        if (IsInteractiveElementActive())
+        {
+            return;
+        }
+        
         base.HandleActivation();
 
         // Focus/unfocus this paper when activated
@@ -36,6 +45,28 @@ public class PaperInteraction : VRInteractable
         {
             paperManager.FocusPaper(menuPaper);
         }
+    }
+    
+    /// <summary>
+    /// Checks if any interactive element (toggle or button) is currently being interacted with.
+    /// This prevents paper unfocus when clicking on toggles or buttons.
+    /// </summary>
+    /// <returns>True if an interactive element is active, false otherwise.</returns>
+    private bool IsInteractiveElementActive()
+    {
+        // Check if a debug toggle interaction is in progress
+        if (DebugToggleInteraction.IsInteractionInProgress)
+        {
+            return true;
+        }
+        
+        // Check if a toggle all button interaction is in progress
+        if (ToggleAllButtonInteraction.IsInteractionInProgress)
+        {
+            return true;
+        }
+        
+        return false;
     }
 
     /// <summary>
