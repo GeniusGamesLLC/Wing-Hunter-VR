@@ -15,6 +15,10 @@ This document specifies the requirements for implementing a VR-accessible settin
 - **Auto-generation**: The process of using C# reflection to automatically create UI toggle elements from DebugSettings properties
 - **Toggle**: A UI element (Unity Toggle component) that represents a single boolean option
 - **VR_Konami_Code**: The classic Konami code adapted for VR: Either thumbstick (Up, Up, Down, Down, Left, Right, Left, Right), then B button, A button
+- **Compact_State**: The unfocused state of a Menu_Paper showing a small preview with placeholder content
+- **Expanded_State**: The focused state of a Menu_Paper showing full-size content with interactive elements
+- **Scroll_Indicator**: A visual element showing the current scroll position within scrollable content
+- **Label_Tab**: A small paper or tag element positioned above a Menu_Paper displaying its title/category
 
 ## Requirements
 
@@ -108,3 +112,80 @@ This document specifies the requirements for implementing a VR-accessible settin
 1. WHEN the Announcement_Board is displayed, THE Announcement_Board SHALL use a cork board or wooden board visual style consistent with the gun rack aesthetic
 2. WHEN Menu_Papers are displayed, THE Announcement_Board SHALL render them as pinned notes/papers with visible pins or tacks
 3. WHEN the Debug_Paper is unlocked, THE Announcement_Board SHALL animate it appearing as if being pinned to the board
+
+### Requirement 10
+
+**User Story:** As a VR user, I want papers to expand when focused so that I can see more content and interact with settings comfortably.
+
+#### Acceptance Criteria
+
+1. WHEN a Menu_Paper is unfocused, THE Menu_Paper SHALL display at a compact size with placeholder/preview content indicating its purpose
+2. WHEN a Menu_Paper becomes focused, THE Menu_Paper SHALL animate to a larger expanded size (similar to Quest Settings app panels)
+3. WHEN a Menu_Paper is expanded, THE Menu_Paper SHALL display full content with readable text and interactive elements
+4. WHEN a Menu_Paper loses focus, THE Menu_Paper SHALL animate back to the compact unfocused state
+
+### Requirement 11
+
+**User Story:** As a VR user, I want debug options to be left-aligned and properly formatted, so that I can easily scan and read the settings list.
+
+#### Acceptance Criteria
+
+1. WHEN displaying debug toggles, THE Debug_Paper SHALL left-align all toggle labels and category headers
+2. WHEN displaying debug toggles, THE Debug_Paper SHALL use consistent indentation for toggles under category headers
+3. WHEN displaying category headers, THE Debug_Paper SHALL visually distinguish headers from toggle items using font weight or size
+
+### Requirement 12
+
+**User Story:** As a VR user, I want to interact with toggles using the VR trigger, so that I can change settings without the paper losing focus.
+
+#### Acceptance Criteria
+
+1. WHEN the user points at a toggle and presses the trigger, THE Debug_Paper SHALL toggle the setting value without unfocusing the paper
+2. WHEN the user points at a Toggle All button and presses the trigger, THE Debug_Paper SHALL toggle all items in that category without unfocusing the paper
+3. WHEN the user points at empty space on a focused paper and presses the trigger, THE Debug_Paper SHALL maintain focus and not dismiss
+
+### Requirement 13
+
+**User Story:** As a VR user, I want each paper to have a visible label/tab above it, so that I can quickly identify what each paper contains.
+
+#### Acceptance Criteria
+
+1. WHEN a Menu_Paper is displayed on the board, THE Announcement_Board SHALL show a label tab above the paper indicating its title (e.g., "Settings", "Debug", "News")
+2. WHEN displaying the label tab, THE Announcement_Board SHALL style it as a smaller paper or tag pinned above the main paper
+3. WHEN a Menu_Paper is in the compact unfocused state, THE Announcement_Board SHALL keep the label tab visible and readable
+4. WHEN a Menu_Paper expands to focused state, THE Announcement_Board SHALL keep the label tab pinned to the board (not moving with the paper)
+
+### Requirement 14
+
+**User Story:** As a VR user, I want to scroll through debug options when there are many settings, so that I can access all options without the paper becoming too large.
+
+#### Acceptance Criteria
+
+1. WHEN the Debug_Paper content exceeds the visible area, THE Debug_Paper SHALL enable vertical scrolling
+2. WHEN scrolling is enabled, THE Debug_Paper SHALL respond to thumbstick up/down input for scrolling
+3. WHEN scrolling is enabled, THE Debug_Paper SHALL display a visual scroll indicator showing current position
+4. WHEN the user reaches the top or bottom of scrollable content, THE Debug_Paper SHALL provide visual feedback indicating the boundary
+
+### Requirement 15
+
+**User Story:** As a VR user, I want the focused paper to be positioned at a comfortable reading distance with adequate size, so that I can easily read and interact with all content.
+
+#### Acceptance Criteria
+
+1. WHEN a Menu_Paper becomes focused, THE Menu_Paper SHALL position itself approximately 1.2-1.5 meters in front of the player (further than current ~1m distance)
+2. WHEN a Menu_Paper is expanded, THE Menu_Paper SHALL be large enough to display content with comfortable margins and readable text
+3. WHEN displaying debug toggles, THE Debug_Paper SHALL have sufficient width to show toggle labels and switches without crowding
+4. WHEN the paper is focused, THE Menu_Paper SHALL maintain a comfortable viewing angle relative to the player's eye level
+
+### Requirement 16
+
+**User Story:** As a VR user, I want toggle switches to have a clear visual design, so that I can easily see the current state and interact with them.
+
+#### Acceptance Criteria
+
+1. WHEN displaying a toggle, THE Debug_Paper SHALL render it as a visual switch (iOS-style) with a sliding knob and track
+2. WHEN a toggle is OFF, THE Debug_Paper SHALL display the knob on the left side with a gray track
+3. WHEN a toggle is ON, THE Debug_Paper SHALL display the knob on the right side with a colored (green/blue) track
+4. WHEN a toggle state changes, THE Debug_Paper SHALL animate the knob sliding to its new position
+5. WHEN displaying toggle layout, THE Debug_Paper SHALL position the label on the left and the toggle switch on the right with consistent spacing
+6. WHEN displaying a Toggle All button, THE Debug_Paper SHALL render it with a distinct button style (not just text) with visual feedback on interaction

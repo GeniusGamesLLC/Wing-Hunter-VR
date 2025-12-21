@@ -4,6 +4,13 @@
 
 This design describes a VR-accessible settings menu system styled as a physical "Announcement Board" with pinned papers representing different menu sections. The system provides an immersive, world-space interface that matches the existing gun rack aesthetic while supporting extensible menu pages including a hidden Debug page unlocked via the classic Konami code.
 
+Key UX features include:
+- **Expandable papers**: Papers display in a compact preview state when unfocused, expanding to full size when selected (similar to Quest Settings app)
+- **Label tabs**: Each paper has a small label/tag pinned above it showing its title
+- **Left-aligned content**: Debug toggles and headers use left-aligned layout for easy scanning
+- **Scrollable content**: Long content lists support thumbstick scrolling with visual indicators
+- **Focus-preserving interaction**: Trigger interactions on toggles don't unfocus the paper
+
 ## Architecture
 
 The system follows a component-based architecture with clear separation between:
@@ -110,37 +117,75 @@ public enum KonamiInput { Up, Down, Left, Right, A, B }
 
 ### 3. MenuPaper (Base Class)
 
-Abstract base for all menu papers.
+Abstract base for all menu papers with compact/expanded state support.
 
 ```csharp
 public abstract class MenuPaper : MonoBehaviour
 {
     [SerializeField] protected string paperTitle;
     [SerializeField] protected Transform contentRoot;
+    [SerializeField] protected Transform placeholderContent; // Shown when compact
     [SerializeField] protected bool isUnlockedByDefault = true;
+    
+    [Header("Compact/Expanded State")]
+    [SerializeField] protected Vector3 compactScale = new Vector3(0.6f, 0.6f, 1f);
+    [SerializeField] protected Vector3 expandedScale = Vector3.one;
+    [SerializeField] protected float expandedZOffset = -0.1f; // Move toward user
     
     public string Title => paperTitle;
     public bool IsUnlocked { get; protected set; }
+    public bool IsFocused { get; protected set; }
     
     public virtual void Initialize() { }
-    public virtual void OnFocus() { }
-    public virtual void OnUnfocus() { }
+    public virtual void OnFocus() { IsFocused = true; /* Expand */ }
+    public virtual void OnUnfocus() { IsFocused = false; /* Compact */ }
     public abstract void RefreshContent();
     
     public void Unlock() { IsUnlocked = true; }
 }
 ```
 
+### 3.1 PaperLabelTab
+
+Small label/tag displayed above each paper showing its title.
+
+```csharp
+public class PaperLabelTab : MonoBehaviour
+{
+    [SerializeField] private TextMeshPro titleText;
+    [SerializeField] private Transform tabVisual;
+    
+    private Vector3 pinnedPosition; // Fixed position on board
+    
+    public void SetTitle(string title);
+    public void SetPinnedPosition(Vector3 position);
+    
+    // Tab stays at pinnedPosition even when paper expands
+    public void OnPaperFocused() { /* Stay in place */ }
+    public void OnPaperUnfocused() { /* Stay in place */ }
+}
+```
+
 ### 4. DebugPaper
 
-Debug-specific paper with reflection-based UI generation.
+Debug-specific paper with reflection-based UI generation, scrolling support, and left-aligned layout.
 
 ```csharp
 public class DebugPaper : MenuPaper
 {
+    [Header("Toggle Generation")]
     [SerializeField] private GameObject togglePrefab;
     [SerializeField] private GameObject categoryHeaderPrefab;
     [SerializeField] private GameObject toggleAllButtonPrefab;
+    
+    [Header("Layout")]
+    [SerializeField] private float leftMargin = 0.02f;
+    [SerializeField] private float categoryIndent = 0f;
+    [SerializeField] private float toggleIndent = 0.03f;
+    [SerializeField] private TextAlignmentOptions textAlignment = TextAlignmentOptions.Left;
+    
+    [Header("Scrolling")]
+    [SerializeField] private PaperScrollController scrollController;
     
     private Dictionary<string, List<DebugToggleBinding>> categoryToggles;
     
@@ -148,12 +193,71 @@ public class DebugPaper : MenuPaper
     {
         isUnlockedByDefault = false;
         GenerateTogglesFromDebugSettings();
+        ConfigureScrolling();
     }
     
     private void GenerateTogglesFromDebugSettings();
     private void CreateCategorySection(string category, PropertyInfo[] properties);
     private void OnToggleChanged(PropertyInfo property, bool value);
     private void OnToggleAllPressed(string category);
+    private void ConfigureScrolling();
+}
+```
+
+### 4.1 PaperScrollController
+
+Handles scrolling for papers with content that exceeds the visible area.
+
+```csharp
+public class PaperScrollController : MonoBehaviour
+{
+    [Header("Scroll Configuration")]
+    [SerializeField] private RectTransform viewport;
+    [SerializeField] private RectTransform content;
+    [SerializeField] private float scrollSpeed = 0.1f;
+    [SerializeField] private float thumbstickDeadzone = 0.2f;
+    
+    [Header("Visual Feedback")]
+    [SerializeField] private GameObject scrollIndicator;
+    [SerializeField] private RectTransform scrollHandle;
+    [SerializeField] private GameObject topBoundaryIndicator;
+    [SerializeField] private GameObject bottomBoundaryIndicator;
+    
+    public bool IsScrollingEnabled { get; private set; }
+    public float ScrollPosition { get; private set; } // 0-1 normalized
+    
+    public void EnableScrolling(bool enable);
+    public void ScrollByThumbstick(float thumbstickY);
+    public void ScrollToTop();
+    public void ScrollToBottom();
+    
+    private void UpdateScrollIndicator();
+    private void ShowBoundaryFeedback(bool isTop);
+}
+```
+
+### 4.2 DebugToggleInteraction (Updated)
+
+Handles VR interaction with toggles without unfocusing the paper.
+
+```csharp
+public class DebugToggleInteraction : MonoBehaviour, IXRHoverInteractable
+{
+    private Toggle toggle;
+    private MenuPaper parentPaper;
+    
+    // When trigger pressed on toggle, toggle the value but DON'T unfocus paper
+    public void OnSelectEntered(SelectEnterEventArgs args)
+    {
+        toggle.isOn = !toggle.isOn;
+        // Do NOT call PaperManager.FocusPaper or unfocus
+    }
+    
+    // Prevent click-through to paper background
+    public void OnHoverEntered(HoverEnterEventArgs args)
+    {
+        // Block raycast from hitting paper behind
+    }
 }
 ```
 
@@ -172,15 +276,18 @@ public class DebugCategoryAttribute : Attribute
 
 ### 6. PaperManager
 
-Manages paper collection and navigation.
+Manages paper collection, navigation, and label tabs.
 
 ```csharp
 public class PaperManager : MonoBehaviour
 {
     [SerializeField] private List<MenuPaper> papers;
     [SerializeField] private Transform paperSpawnParent;
+    [SerializeField] private GameObject labelTabPrefab;
+    [SerializeField] private float labelTabYOffset = 0.18f; // Above paper
     
     private MenuPaper focusedPaper;
+    private Dictionary<MenuPaper, PaperLabelTab> paperLabelTabs;
     
     public IReadOnlyList<MenuPaper> UnlockedPapers => 
         papers.Where(p => p.IsUnlocked).ToList();
@@ -188,6 +295,10 @@ public class PaperManager : MonoBehaviour
     public void FocusPaper(MenuPaper paper);
     public void AddPaper(MenuPaper paper);
     public void RefreshPaperVisibility();
+    
+    // Label tab management
+    private void CreateLabelTabForPaper(MenuPaper paper);
+    private void UpdateLabelTabVisibility();
 }
 ```
 
@@ -274,6 +385,26 @@ public class BoardState
 *For any* input sequence matching exactly (Up, Up, Down, Down, Left, Right, Left, Right, B, A) on either thumbstick followed by buttons, the system SHALL fire the unlock event exactly once.
 **Validates: Requirements 8.2**
 
+### Property 12: Paper State Consistency (Compact vs Expanded)
+*For any* Menu_Paper, when unfocused it SHALL have compact scale and placeholder content visible; when focused it SHALL have expanded scale, be positioned forward, and have full content visible.
+**Validates: Requirements 10.1, 10.2, 10.3, 10.4**
+
+### Property 13: Toggle Layout Alignment
+*For any* generated debug toggle on the Debug_Paper, the toggle label SHALL be left-aligned, toggles SHALL have consistent indentation under their category header, and category headers SHALL have visually distinct styling (larger/bolder font).
+**Validates: Requirements 11.1, 11.2, 11.3**
+
+### Property 14: Interaction Focus Preservation
+*For any* trigger interaction on a toggle, Toggle All button, or empty space within a focused paper, the paper SHALL remain focused after the interaction completes.
+**Validates: Requirements 12.1, 12.2, 12.3**
+
+### Property 15: Label Tab Presence and Positioning
+*For any* displayed Menu_Paper, there SHALL be exactly one label tab above it showing the paper's title, the tab SHALL remain visible in both compact and expanded states, and the tab SHALL stay pinned to the board (not move) when the paper expands.
+**Validates: Requirements 13.1, 13.2, 13.3, 13.4**
+
+### Property 16: Scroll Functionality
+*For any* Debug_Paper where content height exceeds viewport height, scrolling SHALL be enabled with a visible scroll indicator, thumbstick input SHALL change scroll position, and boundary feedback SHALL appear at scroll limits.
+**Validates: Requirements 14.1, 14.2, 14.3, 14.4**
+
 ## Error Handling
 
 ### Input Handling Errors
@@ -316,6 +447,11 @@ Each correctness property will be implemented as a property-based test:
 9. **Property 9**: Generate random category configurations, verify button presence
 10. **Property 10**: Generate random on/off distributions, verify majority logic
 11. **Property 11**: Generate input sequences, verify only exact match triggers unlock
+12. **Property 12**: Generate random focus/unfocus sequences, verify scale and content visibility states
+13. **Property 13**: Generate toggles, verify left alignment and consistent indentation
+14. **Property 14**: Simulate trigger interactions on various paper elements, verify focus preserved
+15. **Property 15**: Generate papers, verify label tab presence, positioning, and fixed behavior during expand
+16. **Property 16**: Generate content of varying heights, verify scroll enablement and indicator behavior
 
 ### Test Annotations
 Each property-based test MUST include:
@@ -338,22 +474,74 @@ Each property-based test MUST include:
 - Size: approximately 0.8m wide x 0.6m tall
 
 ### Paper Appearance
+
+#### Compact State (Unfocused)
+- Smaller scale (60% of full size)
 - Off-white/cream colored paper texture
-- Slightly crumpled/worn edges
+- Slightly dimmed/faded appearance
+- Placeholder content: wavy lines or blurred text suggesting content
 - Visible push pins or tacks at corners
-- Handwritten-style or typewriter font for headers
-- Size: approximately 0.25m x 0.35m per paper
+- Size: approximately 0.15m x 0.21m
+
+#### Expanded State (Focused)
+- Full scale (100%)
+- Bright, fully visible
+- Positioned 1.2-1.5 meters in front of player (increased from ~1m for comfortable reading)
+- Full content visible with readable text
+- Interactive elements enabled
+- Size: approximately 0.35m x 0.45m (increased from 0.25m x 0.35m for more content space)
+
+### Label Tabs
+- Small paper/tag style (approximately 0.08m x 0.03m)
+- Positioned above each paper
+- Pinned with small tack visual
+- Shows paper title in handwritten/typewriter font
+- Stays fixed on board when paper expands
+- Slightly angled for visual interest
+
+### Content Layout (Debug Paper)
+- Left-aligned text throughout
+- Category headers: Bold, larger font (16pt equivalent)
+- Toggle labels: Regular weight, standard font (14pt equivalent)
+- Consistent left margin (2cm from paper edge)
+- Toggle indent under headers (3cm from paper edge)
+- Vertical spacing: 3.5cm between items
+- Toggle switch positioned on right side of paper, label on left
+- Adequate horizontal space between label and toggle switch
+
+### Toggle Visual Design (iOS-style)
+- Toggle track: Pill-shaped background (approximately 5cm x 2.5cm)
+- Toggle knob: Circle that slides left/right within track
+- OFF state: Knob on left, track gray (#808080)
+- ON state: Knob on right, track green (#4CD964) or blue (#007AFF)
+- Knob animation: Smooth slide transition (0.15s ease-out)
+- Hitbox: Covers entire row (label + toggle) for easier VR interaction
+
+### Toggle All Button Visual
+- Distinct button appearance (not just text)
+- Background shape with border/outline
+- Visual feedback on hover (highlight)
+- Visual feedback on press (scale down slightly)
+- Icon or checkbox indicator showing current majority state
+
+### Scroll Indicator
+- Thin vertical bar on right edge of paper
+- Handle shows current scroll position
+- Fades in when scrolling enabled
+- Top/bottom glow effect at scroll boundaries
 
 ### Animations
 - Board appear: Scale up from 0 with slight bounce
 - Board dismiss: Scale down to 0 with fade
-- Paper focus: Slight scale up (1.1x), move forward, brighten
-- Paper unfocus: Return to normal scale, move back, dim
+- Paper expand (focus): Scale from 60% to 100%, move forward, brighten (0.3s ease-out)
+- Paper compact (unfocus): Scale from 100% to 60%, move back, dim (0.2s ease-in)
 - Debug unlock: Paper slides in from side, pin "sticks" with sound
+- Scroll: Smooth content movement with momentum
 
 ### Audio Feedback
 - Board toggle: Soft whoosh sound
-- Paper select: Paper rustle sound
+- Paper select/expand: Paper rustle sound
 - Toggle change: Soft click
+- Scroll: Subtle paper slide sound
 - Konami success: Classic "power up" chime
 - Debug unlock: Pin stick sound + success jingle

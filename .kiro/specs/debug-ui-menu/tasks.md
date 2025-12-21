@@ -153,5 +153,256 @@
     - "Debug Mode Unlocked" message display
     - _Requirements: 8.3_
 
-- [ ] 11. Final Checkpoint - Ensure all tests pass
+- [x] 11. Implement expandable paper states (compact/expanded)
+  - [x] 11.1 Update MenuPaper with compact/expanded state support
+    - Add compactScale, expandedScale, expandedZOffset fields
+    - Add placeholderContent transform reference
+    - Update OnFocus to expand paper (scale up, move forward, show full content)
+    - Update OnUnfocus to compact paper (scale down, move back, show placeholder)
+    - _Requirements: 10.1, 10.2, 10.3, 10.4_
+  - [x] 11.2 Update PaperAnimator for compact/expanded transitions
+    - Add expandAnimation and compactAnimation methods
+    - Animate scale from 60% to 100% on focus (0.3s ease-out)
+    - Animate scale from 100% to 60% on unfocus (0.2s ease-in)
+    - Animate Z position forward/back
+    - Toggle placeholder vs full content visibility
+    - _Requirements: 10.2, 10.4_
+  - [x] 11.3 Create placeholder content for papers
+    - Add placeholder visual (wavy lines or blurred text) to paper prefabs
+    - Show placeholder when compact, hide when expanded
+    - _Requirements: 10.1_
+  - [ ]* 11.4 Write property test for paper state consistency
+    - **Property 12: Paper State Consistency (Compact vs Expanded)**
+    - **Validates: Requirements 10.1, 10.2, 10.3, 10.4**
+
+- [x] 12. Implement paper label tabs
+  - [x] 12.1 Create PaperLabelTab component
+    - Create `Assets/Scripts/UI/Menu/PaperLabelTab.cs`
+    - Store pinned position on board
+    - Display paper title with TextMeshPro
+    - Stay fixed when paper expands (don't move with paper)
+    - _Requirements: 13.1, 13.4_
+  - [x] 12.2 Create label tab prefab
+    - Create `Assets/Prefabs/UI/Menu/LabelTab.prefab`
+    - Small paper/tag visual (8cm x 3cm)
+    - Pin/tack visual at top
+    - TextMeshPro for title
+    - _Requirements: 13.2_
+  - [x] 12.3 Update PaperManager to create label tabs
+    - Instantiate label tab for each paper
+    - Position tab above paper (Y offset)
+    - Update tab visibility with paper visibility
+    - _Requirements: 13.1, 13.3_
+  - [ ]* 12.4 Write property test for label tab presence and positioning
+    - **Property 15: Label Tab Presence and Positioning**
+    - **Validates: Requirements 13.1, 13.2, 13.3, 13.4**
+
+- [x] 13. Fix toggle interaction to preserve focus
+  - [x] 13.1 Update DebugToggleInteraction to prevent unfocus
+    - Modify OnSelectEntered to toggle value without calling unfocus
+    - Block raycast propagation to paper background
+    - Handle Toggle All button interactions similarly
+    - _Requirements: 12.1, 12.2_
+  - [x] 13.2 Update PaperInteraction to ignore clicks on interactive elements
+    - Check if click target is a toggle or button before processing
+    - Only unfocus when clicking empty paper space intentionally (or outside paper)
+    - _Requirements: 12.3_
+  - [ ]* 13.3 Write property test for interaction focus preservation
+    - **Property 14: Interaction Focus Preservation**
+    - **Validates: Requirements 12.1, 12.2, 12.3**
+
+- [x] 14. Implement left-aligned toggle layout
+  - [x] 14.1 Update DebugPaper layout configuration
+    - Add leftMargin, categoryIndent, toggleIndent fields
+    - Set text alignment to Left for all generated text
+    - Apply consistent indentation for toggles under headers
+    - _Requirements: 11.1, 11.2_
+  - [x] 14.2 Update toggle and header prefabs for left alignment
+    - Modify DebugToggle.prefab text alignment to Left
+    - Modify CategoryHeader.prefab text alignment to Left
+    - Ensure header has larger/bolder font than toggles
+    - _Requirements: 11.1, 11.3_
+  - [ ]* 14.3 Write property test for toggle layout alignment
+    - **Property 13: Toggle Layout Alignment**
+    - **Validates: Requirements 11.1, 11.2, 11.3**
+
+- [x] 15. Implement scrolling for long content
+  - [x] 15.1 Create PaperScrollController component
+    - Create `Assets/Scripts/UI/Menu/PaperScrollController.cs`
+    - Track viewport and content RectTransforms
+    - Enable/disable scrolling based on content height vs viewport
+    - Handle thumbstick Y input for scrolling
+    - _Requirements: 14.1, 14.2_
+  - [x] 15.2 Add scroll indicator visuals
+    - Create scroll bar visual on right edge of paper
+    - Update scroll handle position based on scroll position
+    - Show/hide indicator based on scroll enabled state
+    - _Requirements: 14.3_
+  - [x] 15.3 Add scroll boundary feedback
+    - Show top boundary indicator when at scroll top
+    - Show bottom boundary indicator when at scroll bottom
+    - Visual glow or bounce effect at boundaries
+    - _Requirements: 14.4_
+  - [x] 15.4 Integrate scroll controller with DebugPaper
+    - Add PaperScrollController reference to DebugPaper
+    - Configure scrolling after toggle generation
+    - Wire up thumbstick input when paper is focused
+    - _Requirements: 14.1, 14.2_
+  - [ ]* 15.5 Write property test for scroll functionality
+    - **Property 16: Scroll Functionality**
+    - **Validates: Requirements 14.1, 14.2, 14.3, 14.4**
+
+- [x] 16. Update prefabs with new features
+  - [x] 16.1 Update MenuPaperTemplate prefab
+    - Add placeholder content child object
+    - Configure compact/expanded scale values
+    - Add PaperLabelTab spawn point
+    - _Requirements: 10.1, 13.1_
+  - [x] 16.2 Update AnnouncementBoard prefab
+    - Add LabelTab prefab reference to PaperManager
+    - Configure label tab Y offset
+    - _Requirements: 13.1_
+
+- [ ] 17. Final Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
+
+
+- [x] 18. Bug fixes for paper focus/unfocus behavior
+  - [x] 18.1 Fix paper scaling on focus/unfocus
+    - Papers should start at normal size (1.0 scale)
+    - On focus: scale up slightly (1.1x) and move forward
+    - On unfocus: return to normal size (1.0 scale), NOT compact (0.6x)
+    - Remove the compact scale behavior - papers stay readable size
+    - _Requirements: 10.1, 10.2, 10.3, 10.4_
+  - [x] 18.2 Remove darkening/dimming effect on unfocus
+    - Remove SetDimming calls from PaperAnimator
+    - Papers should maintain full brightness in all states
+    - _Requirements: 2.3_
+  - [x] 18.3 Disable locomotion when paper is focused
+    - When a paper gains focus, disable thumbstick locomotion
+    - When paper loses focus or board closes, re-enable locomotion
+    - Prevent scrolling input from moving the player
+    - _Requirements: 14.2_
+
+- [x] 19. Align shooting ray with interaction ray
+  - [x] 19.1 Update XR Interactor to use gun muzzle as ray origin
+    - When gun is equipped, set NearFarInteractor's attach transform to muzzle point
+    - This makes UI interaction ray match the bullet ray
+    - Update GunSelectionManager to notify interactor of muzzle point changes
+    - _Note: Both shooting and UI interaction should originate from the same point_
+  - [ ]* 19.2 Alternative: Create custom XR Ray Interactor for gun hand
+    - If attach transform approach doesn't work, create custom interactor
+    - Override ray origin to use current gun's muzzle point
+    - Ensure ray visual matches actual interaction/shooting direction
+
+
+- [ ] 20. Improve toggle visual design
+  - [ ] 20.1 Create visual toggle switch (iOS-style)
+    - Add toggle track (pill-shaped background, ~5cm x 2.5cm)
+    - Add toggle knob (circle that slides left/right)
+    - Off state: knob on left, track gray (#808080)
+    - On state: knob on right, track green (#4CD964)
+    - Animate knob position on state change (0.15s ease-out)
+    - _Requirements: 16.1, 16.2, 16.3, 16.4_
+  - [ ] 20.2 Fix toggle layout alignment
+    - Setting label: left-aligned on paper
+    - Toggle switch: right-aligned on paper
+    - Consistent spacing between label and toggle
+    - Hitbox should cover the entire row for easier interaction
+    - _Requirements: 16.5_
+  - [ ] 20.3 Improve Toggle All button visual
+    - Add visual indicator (checkbox or toggle icon)
+    - Make it look like a button with background/border
+    - Visual feedback on hover/press
+    - Distinguish from individual toggles (different style/size)
+    - _Requirements: 16.6_
+
+
+- [ ] 25. Adjust paper positioning and size for better readability
+  - [ ] 25.1 Increase focused paper distance from player
+    - Update focusDistance in PaperAnimator from ~1.0m to 1.2-1.5m
+    - Ensure paper is at comfortable reading distance
+    - Test with various player heights/positions
+    - _Requirements: 15.1, 15.4_
+  - [ ] 25.2 Increase paper size for more content space
+    - Scale up MenuPaperTemplate prefab (from 0.25x0.35m to ~0.35x0.45m)
+    - Adjust content area RectTransform to match new size
+    - Ensure toggles and text have adequate margins
+    - _Requirements: 15.2, 15.3_
+  - [ ] 25.3 Update content layout for larger paper
+    - Adjust toggle spacing and margins for new paper size
+    - Ensure category headers and toggles are well-spaced
+    - Test scroll behavior with new dimensions
+    - _Requirements: 15.2, 15.3_
+
+
+- [x] 21. Fix label tab size and readability
+  - [x] 21.1 Increase label tab size
+    - Make tab background larger (currently 8cm x 3cm, increase to ~12cm x 4cm)
+    - Increase font size for title text (currently 0.08, increase to ~0.15-0.2)
+    - Ensure text is readable from typical VR viewing distance (1-2m)
+  - [x] 21.2 Improve label tab positioning
+    - Position tabs higher above papers if needed
+    - Ensure tabs don't overlap with paper content
+
+- [x] 22. Move focused paper to player position
+  - [x] 22.1 Implement paper-to-player movement on focus
+    - When a paper gains focus, animate it from the board to in front of the player
+    - Position paper 1-1.5m in front of player camera at eye level
+    - Paper should face the player (rotate to look at camera)
+    - Store original board position for return animation
+    - _Requirements: 1.3, 10.2_
+  - [x] 22.2 Implement paper return animation on unfocus
+    - When paper loses focus, animate it back to its original board position
+    - Restore original rotation to face forward on board
+    - Smooth transition animation (0.3-0.4s)
+    - _Requirements: 10.4_
+  - [x] 22.3 Update PaperManager to track paper world positions
+    - Store each paper's "home" position on the board
+    - Calculate player-relative focus position dynamically
+    - Handle case where player moves while paper is focused (paper stays in front)
+    - _Requirements: 1.3_
+  - [x] 22.4 Coordinate with LocomotionDisabler
+    - Ensure locomotion is disabled AFTER paper starts moving to player
+    - Re-enable locomotion AFTER paper returns to board
+    - Prevent edge cases where player is stuck
+    - _Requirements: 14.2_
+
+- [ ] 23. Bug fixes for paper-to-player and visual consistency
+  - [x] 23.1 Fix pin sizes to be consistent
+    - Paper pins are 0.015 scale, label tab pin is 0.01 scale
+    - Make all pins match the label tab size (0.01) - smaller and less intrusive
+    - Update MenuPaperTemplate.prefab pin scales
+  - [x] 23.2 Add gap between paper and label tab
+    - Currently no visible gap between paper top and label tab
+    - Increase labelTabYOffset in PaperManager to create visible separation
+    - Ensure label tab doesn't overlap with paper content
+  - [x] 23.3 Fix paper going behind board when player is close
+    - RESOLVED by Task 24: Camera stacking ensures paper renders on top regardless of position
+    - Paper on FocusedPaper layer is rendered by overlay camera above world geometry
+  - [x] 23.4 Fix locomotion not being disabled
+    - Added LocomotionDisabler component to AnnouncementBoard in scene
+    - Rewrote to auto-find locomotion providers (no manual setup needed)
+    - Disables DynamicMoveProvider, ContinuousTurnProvider, SnapTurnProvider when paper focused
+    - Debug logging enabled to confirm locomotion disable/enable is working
+
+- [x] 24. Implement camera stacking for focused paper visibility
+  - [x] 24.1 Create FocusedPaper layer and overlay camera
+    - Add new layer "FocusedPaper" to project (layer 9)
+    - Add new layer "VRController" to project (layer 10)
+    - Create paper overlay camera that only renders FocusedPaper layer
+    - Create controller overlay camera that renders VRController layer ON TOP of paper
+    - Configure base camera to exclude both layers
+    - Set overlay cameras render type to Overlay in URP
+    - Add overlay cameras to base camera's stack (paper first, then controller)
+  - [x] 24.2 Create FocusedPaperLayerManager component
+    - Create script to switch paper layer when focused/unfocused
+    - On focus: move paper to FocusedPaper layer
+    - On unfocus: move paper back to Default layer
+    - Recursively set layer on all child objects
+    - Auto-find VR controllers and move them to VRController layer
+    - Controllers render on top of focused paper via separate overlay camera
+  - [x] 24.3 Integrate with MenuPaper focus system
+    - Add FocusedPaperLayerManager to paper prefab or create at runtime
+    - Call layer switch in OnFocus/OnUnfocus methods
+    - Controllers on VRController layer render last (on top of everything)

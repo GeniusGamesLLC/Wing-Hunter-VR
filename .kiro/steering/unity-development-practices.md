@@ -50,39 +50,42 @@ When working with Unity projects, follow these practices to prevent crashes and 
 - Monitor Unity process stability during automated operations
 
 ### 6.1 Script Compilation Wait Times - CRITICAL
-**Unity recompilation takes 5-15+ seconds. You MUST wait for it to complete before making more changes.**
+**Unity recompilation takes 15-30+ seconds. You MUST wait for it to complete before making more changes.**
 
 **After creating or modifying ANY C# script:**
 1. **STOP and WAIT** - Do NOT immediately make another MCP call or file write
-2. **Check compilation status** - Use `mcp_unityMCP_read_console` to verify no errors
-3. **Verify Unity is responsive** - Use `mcp_unityMCP_manage_editor` with `action="telemetry_status"`
-4. **Only then proceed** - After confirming Unity has finished compiling
+2. **USE executeBash with timeout** - Run `sleep 30` to force a 30-second wait before checking compilation
+3. **Check compilation status** - Use `mcp_unityMCP_read_console` to verify no errors
+4. **Verify Unity is responsive** - Use `mcp_unityMCP_manage_editor` with `action="telemetry_status"`
+5. **Only then proceed** - After confirming Unity has finished compiling
+
+**MANDATORY WAIT PROCEDURE after script changes:**
+```
+1. Write/modify script via fsWrite or strReplace
+2. IMMEDIATELY run: executeBash with command="sleep 30" (forces 30 second wait)
+3. THEN check console for compilation errors with mcp_unityMCP_read_console
+4. Verify telemetry_status returns successfully
+5. ONLY THEN make next change or MCP call
+```
 
 **Signs Unity is still compiling:**
 - Console shows "Compiling..." or script reload messages
 - Unity editor shows spinning wheel
 - MCP calls return errors or timeouts
 - `telemetry_status` fails or returns slowly
-
-**Workflow after script changes:**
-```
-1. Write/modify script via fsWrite or strReplace
-2. WAIT - Unity detects change and starts compiling (5-15 seconds)
-3. Check console for compilation errors
-4. Verify telemetry_status returns successfully
-5. ONLY THEN make next change or MCP call
-```
+- Console still shows OLD errors that should have been fixed
 
 **NEVER do this:**
 - Create multiple scripts in rapid succession
 - Modify a script then immediately call MCP to use it
 - Write script A, then immediately write script B
 - Assume compilation is instant
+- Check console immediately after script changes (wait 30 seconds first!)
 
 **If you see compilation errors:**
 - STOP all operations
 - Fix the error in the script
-- Wait for recompilation
+- Run `sleep 30` to wait for recompilation
 - Verify console is clear before continuing
 
 ### 6.2 Asset Import and Meta Files - AVOID LOOPS
